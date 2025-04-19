@@ -37,13 +37,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // user-defined pre-processor,...
 // user-defined containters, data-type,..
 
-// #include <opencv2\opencv.hpp>
-
 #ifndef PARAMS_HPP
 #define PARAMS_HPP
 
 // IOU between 3D Boxes
 #include <boost/geometry.hpp>
+#include <opencv2/core.hpp>
 // #include <boost/geometry/geometries/point_xy.hpp>
 // #include <boost/geometry/geometries/polygon.hpp>
 // #include <boost/geometry/geometries/adapted/c_array.hpp>
@@ -181,8 +180,8 @@ namespace sym {
 		XY, XYWH, XYRyx
 	};
 
-	static int DIMS_STATE[3] = { 4, 6, 6};
-	static int DIMS_OBS[3] = { 2, 4, 3};
+	static int DIMS_STATE[3] = {4, 6, 6};
+	static int DIMS_OBS[3] = {2, 4, 3};
 
 	enum OBJECT_TYPE {
 		CAR, VAN,
@@ -196,8 +195,8 @@ namespace sym {
 		"Cyclist", "Truck", "Tram",
 		"Misc", "DontCare", "Bus" };
 
-	static std::string DB_NAMES[6] = { "MOT15", "MOT17", "MOT20", "KITTI", "KITTI", "MOTS20" };
-	static int FRAME_OFFSETS[6] = { 1,1,1,0,0,1 };
+	static std::string DB_NAMES[6] = {"MOT15", "MOT17", "MOT20", "KITTI", "KITTI", "MOTS20"};
+	static int FRAME_OFFSETS[6] = {1, 1, 1, 0, 0, 1};
 
 	static cv::Scalar OBJECT_TYPE_COLORS[9] = {
 		cv::Scalar(255, 255, 0),	/*Car: Lite Blue (Mint)*/
@@ -212,17 +211,17 @@ namespace sym {
 	};	/*DontCare: Black*/
 
 	// Parameters: 11*10*7 = 770 cases * num of scenes * num of detectors * num of object classes, too many.
-	static float DET_SCORE_THS[15] = { -100.0, 0.0, 0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,0.98,0.99,1.0 };
-	//static float DET_SCORE_THS[11] = { 0.0,0.52,0.54,0.55,0.56,0.58,0.62,0.64,0.65,0.66,0.68};
-	static int TRACK_INIT_MIN[10] = { 1,2,3,4,5,6,7,8,9,10 };
-	static int TRACK_T2TA_MAX[8] = { 5,10,15,20,30,60,80,100 };
-	static float VEL_UP_ALPHAS[12] = { 0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,0.99 };
-	static float MERGE_THS[8] = { 0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0 };
-	static float DET_SCORE_THS_LOWER[7] = { 0.0,0.1,0.2,0.3,0.4,0.5,0.6 };
+	static float DET_SCORE_THS[15] = {-100.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98, 0.99, 1.0};
+	//static float DET_SCORE_THS[11] = {0.0, 0.52, 0.54, 0.55, 0.56, 0.58, 0.62, 0.64, 0.65, 0.66, 0.68};
+	static int TRACK_INIT_MIN[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	static int TRACK_T2TA_MAX[8] = {5, 10, 15, 20, 30, 60, 80, 100};
+	static float VEL_UP_ALPHAS[12] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99};
+	static float MERGE_THS[8] = {0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+	static float DET_SCORE_THS_LOWER[7] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
 
-	static std::string MERGE_METRICS_STR[3] = { "SIOA","IOU", "mIOU" };
+	static std::string MERGE_METRICS_STR[3] = {"SIOA","IOU", "mIOU"};
 
-	enum AFFINITY_OPT { GMPHD, KCF, MAF };
+	enum AFFINITY_OPT {GMPHD, KCF, MAF};
 }
 
 #define IS_DONTCARE(x) (((int)x)==sym::OBJECT_TYPE::DONTCARE)
@@ -263,11 +262,16 @@ typedef struct MOTparams {
 	/*Simple Affinity Fusion*/
 
 	MOTparams() {};
-	MOTparams(int obj_type, float dConf_th, int trk_min, int t2ta_max, int mg_metric, float mg_th, float vel_alpha, int group_q_size, int frames_offset,
-		int saf_d2ta = 2, int saf_t2ta = 2, bool mask_d2ta = true, bool mask_t2ta = true,
-		const cv::Vec2f& kcf_bounds_d2ta = cv::Vec2f(0.5, 0.9), const cv::Vec2f& kcf_bounds_t2ta = cv::Vec2f(0.5, 0.9),
-		const cv::Vec2f& iou_bounds_d2ta = cv::Vec2f(0.1, 0.9), const cv::Vec2f& iou_bounds_t2ta = cv::Vec2f(0.1, 0.9),
-		const cv::Vec2b& GATES_ONOFF = cv::Vec2b(true, true)) {
+	MOTparams(
+		int obj_type, float dConf_th, int trk_min, int t2ta_max, int mg_metric, float mg_th,
+		float vel_alpha, int group_q_size, int frames_offset, int saf_d2ta = 2, int saf_t2ta = 2,
+		bool mask_d2ta = true, bool mask_t2ta = true,
+		const cv::Vec2f& kcf_bounds_d2ta = cv::Vec2f(0.5, 0.9),
+		const cv::Vec2f& kcf_bounds_t2ta = cv::Vec2f(0.5, 0.9),
+		const cv::Vec2f& iou_bounds_d2ta = cv::Vec2f(0.1, 0.9),
+		const cv::Vec2f& iou_bounds_t2ta = cv::Vec2f(0.1, 0.9),
+		const cv::Vec2b& GATES_ONOFF = cv::Vec2b(true, true)
+	) {
 
 		this->OBJ_TYPE = obj_type;
 
