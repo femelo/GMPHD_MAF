@@ -32,7 +32,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "pch.h"
 #include "OnlineTracker.h"
 
 // BOOST_GEOMETRY_REGISTER_C_ARRAY_CS(cs::cartesian)
@@ -517,7 +516,7 @@ void OnlineTracker::cvPrintMat(cv::Mat matrix, string name)
 {
 	/*
 	<Mat::type()>
-	depth¿¡ channels±îÁö Æ÷ÇÔÇÏ´Â °³³ä ex. CV_64FC1
+	depthï¿½ï¿½ channelsï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ex. CV_64FC1
 	<Mat::depth()>
 	CV_8U - 8-bit unsigned integers ( 0..255 )
 	CV_8S - 8-bit signed integers ( -128..127 )
@@ -597,7 +596,7 @@ void OnlineTracker::cvPrintVec2Vec(const vector<vector<bool>>& assigns, const st
 string  OnlineTracker::cvPrintRect(const cv::Rect& rec) {
 
 	char carr[256];
-	sprintf_s(carr, "(%d,%d,%d,%d)", rec.x, rec.y, rec.width, rec.height);
+	sprintf(carr, "(%d,%d,%d,%d)", rec.x, rec.y, rec.width, rec.height);
 	//printf("(%.2f,%.2f,%.2f,%.2f)");
 
 	return string(carr);
@@ -606,9 +605,9 @@ cv::Mat OnlineTracker::cvPerspectiveTrans2Rect(const cv::Mat img, const vector<c
 	// https://blog.naver.com/PostView.nhn?blogId=pckbj123&logNo=100205803400&proxyReferer=https%3A%2F%2Fwww.google.com%2F
 	/*
 	0	1
-	¦£¦¡¦¡¦¡¦¤
-	¦¢	¦¢
-	¦¦¦¡¦¡¦¡¦¥
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	ï¿½ï¿½	ï¿½ï¿½
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	2	3
 	*/
 
@@ -692,7 +691,7 @@ void OnlineTracker::CollectTracksbyID(unordered_map<int, vector<BBTrk>>& tracksb
 		for (int j = 0; j < targets.size(); j++)
 		{
 
-			// ArrangeTargetsVecsBatchesLiveLost ¿¡ ÀÇÇØ alive track µé¸¸ ¸ð¿©ÀÖ´Â »óÅÂ
+			// ArrangeTargetsVecsBatchesLiveLost ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ alive track ï¿½é¸¸ ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½
 			int id = targets.at(j).id;
 
 			if (targets.at(j).isNew && targets.at(j).isAlive) { // only add new tracks
@@ -719,11 +718,11 @@ void OnlineTracker::CollectTracksbyID(unordered_map<int, vector<BBTrk>>& tracksb
 		for (int j = 0; j < targets.size(); j++)
 		{
 
-			// ArrangeTargetsVecsBatchesLiveLost ¿¡ ÀÇÇØ alive track µé¸¸ ¸ð¿©ÀÖ´Â »óÅÂ
+			// ArrangeTargetsVecsBatchesLiveLost ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ alive track ï¿½é¸¸ ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½
 			int id = targets.at(j).id;
 
 			if (targets.at(j).isAlive) {
-				// targets.at(j).fn = this->sysFrmCnt; // ÀÌ°Ô ¿Ö ¾È³Ñ¾î °¬´ÂÁö ¹Ì½ºÅ×¸®´Ù, ¿Í.. prediction ¿¡¼­ framenumber¸¦ update ¾ÈÇØÁá³×..
+				// targets.at(j).fn = this->sysFrmCnt; // ï¿½Ì°ï¿½ ï¿½ï¿½ ï¿½È³Ñ¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì½ï¿½ï¿½×¸ï¿½ï¿½ï¿½, ï¿½ï¿½.. prediction ï¿½ï¿½ï¿½ï¿½ framenumberï¿½ï¿½ update ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½..
 
 				vector<BBTrk> tracklet;
 				tracklet.push_back(targets.at(j));

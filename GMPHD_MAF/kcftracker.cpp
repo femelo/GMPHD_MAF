@@ -80,7 +80,6 @@ or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
  */
 #pragma once
-#include "pch.h"
 
 #ifndef _KCFTRACKER_HEADERS
 #include "kcftracker.hpp"
@@ -196,7 +195,7 @@ void KCFTracker::init(const cv::Mat& image, const cv::Rect &roi, const cv::Mat &
 				if ((int)bin_mask.at<uchar>(r - _roi_int_frm.y, c - _roi_int_frm.x) == 0) {
 
 					// masked_image.at<cv::Vec3b>(r, c) = cv::Vec3b(0, 0, 0);
-					// or ¹è°æÀÇ ¿µÇâ·ÂÀ» ÁÙÀÌ±â À§ÇØ average µÈ rgb value ¸¦ ³Ö¾î º¸´Â°ÍÀº ¾î¶²°¡?
+					// or ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ average ï¿½ï¿½ rgb value ï¿½ï¿½ ï¿½Ö¾ï¿½ ï¿½ï¿½ï¿½Â°ï¿½ï¿½ï¿½ ï¿½î¶²ï¿½ï¿½?
 
 					bg_pts.push_back(cv::Point2i(c, r));
 					bg_sum_ += (cv::Vec3d)bgr;
@@ -478,8 +477,8 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 				if ((int)bin_mask.at<uchar>(r - _roi_mask.y, c - _roi_mask.x) == 0) {
 					
 					// masked_image.at<cv::Vec3b>(r, c) = cv::Vec3b(0, 0, 0);
-					// or ¹è°æÀÇ ¿µÇâ·ÂÀ» ÁÙÀÌ±â À§ÇØ average µÈ rgb value ¸¦ ³Ö¾î º¸´Â°ÍÀº ¾î¶²°¡?
-					// -> ±×³É °ËÁ¤»ö±×´ë·Î ÇÏ´Â°Ô Á¦ÀÏ ÁÁ¾ÒÀ½
+					// or ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ average ï¿½ï¿½ rgb value ï¿½ï¿½ ï¿½Ö¾ï¿½ ï¿½ï¿½ï¿½Â°ï¿½ï¿½ï¿½ ï¿½î¶²ï¿½ï¿½?
+					// -> ï¿½×³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ ï¿½Ï´Â°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 					bg_pts.push_back(cv::Point2i(c, r)); 
 					bg_sum_ += (cv::Vec3d)bgr;

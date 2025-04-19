@@ -33,7 +33,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 // GMPHD_MAF.cpp
-#include "pch.h"
 #include "GMPHD_MAF.h"
 
 GMPHD_MAF::GMPHD_MAF()
@@ -117,7 +116,7 @@ int GMPHD_MAF::RunMOTS(const int& iFrmCnt, const cv::Mat& img, const vector<BBDe
 		}
 	}
 
-	if (MERGE_DET_ON) { // ¾ÈÇÏ´Â°Ô ÁÁ³× ¾îÂ¥ÇÇ track level ¿¡¼­ ÇÏ´Âµ¥
+	if (MERGE_DET_ON) { // ï¿½ï¿½ï¿½Ï´Â°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Â¥ï¿½ï¿½ track level ï¿½ï¿½ï¿½ï¿½ ï¿½Ï´Âµï¿½
 		std::vector<BBDet> mereged_dets = this->MergeDetInstances(detVec, true);
 		detVec.clear();
 		detVec = mereged_dets;
@@ -361,8 +360,8 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 		}
 	}
 
-	Concurrency::parallel_for(0, nObs, [&](int r) {
-		//for (int r = 0; r < nObs; ++r){
+	#pragma omp parallel for
+	for (int r = 0; r < nObs; ++r) {
 		for (int c = 0; c < stats_matrix[r].size(); ++c) {
 			// Calculate the Affinity between detection (observations) and tracking (states)
 			q_values[r][c] = FrameWiseAffinity(obss[r], stats_matrix[r][c], MODEL_TYPE);
@@ -394,8 +393,8 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 
 	// Calculate States' Weights by GMPHD filtering with q values
 	// Then the Cost Matrix is filled with States's Weights to solve Assignment Problem.
-	Concurrency::parallel_for(0, nObs, [&](int r) {
-		//for (int r = 0; r < nObs; ++r){
+	#pragma omp parallel for
+	for (int r = 0; r < nObs; ++r) {
 		int nStats = stats_matrix[r].size();
 		double denominator = 0.0;
 		for (int c = 0; c < stats_matrix[r].size(); ++c) {		
@@ -411,14 +410,14 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 				// numerator = 0.0;
 			}
 			else
-				stats_matrix[r][c].weight = numerator / denominator;							// (19), numerator(ºÐÀÚ), denominator(ºÐ¸ð)
+				stats_matrix[r][c].weight = numerator / denominator;							// (19), numerator(ï¿½ï¿½ï¿½ï¿½), denominator(ï¿½Ð¸ï¿½)
 
 			// Scaling the affinity value to Integer
 			if (stats_matrix[r][c].weight > 0.0) {
 				if ((double)(/*stats_matrix[r][c].weight*/numerator) < (double)(FLT_MIN)) {
 					std::cerr << "[" << iFrmCnt << "] weight(FW) < FLT_MIN" << std::endl;
 					if (!AFFINITY_COST_L1_OR_L2_NORM_FW)	m_cost[c][r] = -1;
-					else									m_cost[c][r] = 10000;	// ¾îÂ¥ÇÇ ¾ÆÁÖÀÛÀº °ªÀÌ ³ª¿Ã¸¸ÇÑ ¾ÖµéÀº GATING ¿¡¼­ ³¯¾Æ°¥Å×´Ï °°Àº 10000
+					else									m_cost[c][r] = 10000;	// ï¿½ï¿½Â¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ GATING ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Æ°ï¿½ï¿½×´ï¿½ ï¿½ï¿½ï¿½ï¿½ 10000
 				}
 				else {
 					if (!AFFINITY_COST_L1_OR_L2_NORM_FW)	m_cost[c][r] = -1.0*Q_TH_LOW_10_INVERSE * numerator;
@@ -427,7 +426,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 			}
 			else {
 				if (!AFFINITY_COST_L1_OR_L2_NORM_FW)			m_cost[c][r] = 0;
-				else											m_cost[c][r] = 10000;	// upper bound, double ·Î Ç¥Çö ¸øÇÏ´Â°ª -> association ÈÄº¸ Á¶Â÷ Á¦¿Ü
+				else											m_cost[c][r] = 10000;	// upper bound, double ï¿½ï¿½ Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´Â°ï¿½ -> association ï¿½Äºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			}
 			/*printf("(FW) Obs%d(%d,%d,%d,%d,%.4f) -> Stat%d(id%d):%.lf (n:%lf, q:%.20lf, W':%.5f)\n",\
 			r, obss[r].rec.x, obss[r].rec.y, obss[r].rec.width, obss[r].rec.height, obss[r].weight,
@@ -470,8 +469,8 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 
 			vector<BBDet> kcf_dummy;
 			vector<vector<BBTrk>> stats_dummy;
-			Concurrency::parallel_for(0, mStats, [&](int c) {
-				//for (int c = 0; c < mStats; ++c) {
+			#pragma omp parallel for
+			for (int c = 0; c < mStats; ++c) {
 					//cv::Mat framePrev = this->imgBatch[this->params.QUEUE_SIZE-2];
 				cv::Mat frameProc = img.clone();
 
@@ -488,7 +487,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 					statResize.copyTo(canvasDA(cv::Rect(margin, margin + cellWH * c, 100, 100)));
 
 					char strIDConf[64];
-					sprintf_s(strIDConf, "ID%d (%.3f)", id, stats[c].conf);
+					sprintf(strIDConf, "ID%d (%.3f)", id, stats[c].conf);
 					cv::putText(canvasDA, string(strIDConf), cv::Point(margin, margin / 2 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id / 2) % (MAX_OBJECTS - 1)], 2);
 				}
 
@@ -630,7 +629,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 			// Fusing GMPHD and KCF scores
 			float CONF_LOWER_THRESH = this->params.KCF_BOUNDS_D2TA[0];
 			float CONF_UPPER_THRESH = this->params.KCF_BOUNDS_D2TA[1];
-			float IOU_LOWER_THRESH = this->params.IOU_BOUNDS_D2TA[0]; // 0.1: loose (moving cam) 0.4: static cam (Áö±Ý±îÁö ´Ù ÀÌ·¸°ÔÇÑ°Í¸¸ Á¦ÃâÇÔ)
+			float IOU_LOWER_THRESH = this->params.IOU_BOUNDS_D2TA[0]; // 0.1: loose (moving cam) 0.4: static cam (ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ì·ï¿½ï¿½ï¿½ï¿½Ñ°Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
 			float IOU_UPPER_THRESH = this->params.IOU_BOUNDS_D2TA[1];
 
 			if (this->params.SAF_D2TA_MODE == sym::AFFINITY_OPT::MAF) {
@@ -776,7 +775,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 				stats_matrix[r][c].cov.copyTo(stats[c].cov);
 
 				// KCF Features Update
-				// cost °è»ê ºÎºÐ¿¡¼­ 0.25 ÀÌ»óÀÌ¸é init ¾Æ´Ï¸é update ¸¦ ÇØ¼­ stats_matrix[r][c] ¿¡ °¡Áö°í ÀÖµµ·Ï ÇÏ´Â°Ô ÀÏ°ü¼ºÀÌ ÀÖ°Ú´Ù.
+				// cost ï¿½ï¿½ï¿½ ï¿½ÎºÐ¿ï¿½ï¿½ï¿½ 0.25 ï¿½Ì»ï¿½ï¿½Ì¸ï¿½ init ï¿½Æ´Ï¸ï¿½ update ï¿½ï¿½ ï¿½Ø¼ï¿½ stats_matrix[r][c] ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ ï¿½Ï´Â°ï¿½ ï¿½Ï°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö°Ú´ï¿½.
 				/*if (stats[c].conf > 0.95)
 				{
 					stats_matrix[r][c].papp.init(obss[r].rec, img);
@@ -789,7 +788,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 					if (APPEARANCE_STRICT_UPDATE_ON) {
 						//update_on = (obss[r].confidence >= 0.95);
 						update_on = (kcf_cost_not_norm[c][r] >= APPEARANCE_UPDATE_DET_TH);
-						// ¿©±â°¡ ¾Æ´Ï¶ó, kcf score °ªÀÌ ÀÏÁ¤ (0.85) ÀÌÇÏ¸é, ÀÌÀü°ÍÀ¸·Î µÇµ¹¸®´Â°Ô ¸Â´Â°Í °°´Ù.
+						// ï¿½ï¿½ï¿½â°¡ ï¿½Æ´Ï¶ï¿½, kcf score ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (0.85) ï¿½ï¿½ï¿½Ï¸ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Çµï¿½ï¿½ï¿½ï¿½Â°ï¿½ ï¿½Â´Â°ï¿½ ï¿½ï¿½ï¿½ï¿½.
 
 					}
 
@@ -802,7 +801,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 							obss[r].segMask.cols, obss[r].segMask.rows);*/
 
 						stats_matrix[r][c].papp.init(frameProc, obss[r].rec, obss[r].segMask, this->params.SAF_MASK_D2TA);
-						// line 2271, 2254 obss ¿¡ Ãß°¡ÇØÁÖ´Â dummy ¿¡ segMask º¹»ç ¾ÈÇØ¼­ resize src size width, height >0 ¿¡¼­ °É¸²
+						// line 2271, 2254 obss ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ dummy ï¿½ï¿½ segMask ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ø¼ï¿½ resize src size width, height >0 ï¿½ï¿½ï¿½ï¿½ ï¿½É¸ï¿½
 						cv::Rect res = stats_matrix[r][c].papp.update(frameProc, confProb, confMap, obss[r].rec, true, obss[r].segMask, this->params.SAF_MASK_D2TA);
 
 						stats[c].papp = stats_matrix[r][c].papp;
@@ -1138,7 +1137,7 @@ void GMPHD_MAF::FusionMinMaxNorm(const int& nObs, const int& mStats, vector<vect
 
 				gmphd_cost[c][r] = (gmphd_cost[c][r] - min_gmphd_cost) / (range_gmphd_cost);
 
-				// T2TA ¸¦ ±æ°Ô ÇÑ°æ¿ì GMPHD cost (position) °¡ ³ô¾Æµµ KCF (appearance) ¾È´áÀº°Ç Á¦¿ÜÇÏ±â À§ÇÔ
+				// T2TA ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ñ°ï¿½ï¿½ GMPHD cost (position) ï¿½ï¿½ ï¿½ï¿½ï¿½Æµï¿½ KCF (appearance) ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (kcf_temp < CONF_LOWER_THRESH) kcf_cost[c][r] = 0.0;
 				else kcf_cost[c][r] = (kcf_cost[c][r] - min_kcf_cost) / (range_kcf_cost);
 
@@ -1149,7 +1148,7 @@ void GMPHD_MAF::FusionMinMaxNorm(const int& nObs, const int& mStats, vector<vect
 					continue;
 				}
 				// alternative cost using IOU instead of gmphd_cost when KCF cost is high
-				// GMPHD cost °¡ ³·¾Æµµ KCF ¸Å¿ì ´àÀº°Å³ª IOU °¡ ¸Å¿ì ³ôÀº°ÍÀº Æ÷ÇÔ½ÃÅ°±â À§ÇÔ
+				// GMPHD cost ï¿½ï¿½ ï¿½ï¿½ï¿½Æµï¿½ KCF ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Å³ï¿½ IOU ï¿½ï¿½ ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ô½ï¿½Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (gmphd_cost[c][r] == 0 && (kcf_temp >= CONF_UPPER_THRESH || IOUs[r][c] >= IOU_UPPER_THRESH)) {
 					cost_fusion = IOUs[r][c] * kcf_cost[c][r];
 				}
@@ -1182,7 +1181,7 @@ void GMPHD_MAF::FusionMinMaxNorm(const int& nObs, const int& mStats, vector<vect
 					continue;
 				}
 				// alternative cost using IOU instead of gmphd_cost
-				// && ·Î ¹Ù²ãº¼±î -> || °¡ ´õ ÁÁÀ½
+				// && ï¿½ï¿½ ï¿½Ù²ãº¼ï¿½ï¿½ -> || ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (gmphd_cost[c][r] == 0 || IOUs[r][c] > IOU_LOWER_THRESH) {
 					cost_fusion = IOUs[r][c] * kcf_cost[c][r];
 				}
@@ -1229,7 +1228,7 @@ vector<double> GMPHD_MAF::FusionZScoreNorm(const int& nObs, const int& mStats,
 				gmphd_cost[c][r] = (gmphd_cost[c][r] - mean_gmphd_cost) / (stddev_gmphd);
 				if (gmphd_cost[c][r] < 0.0) gmphd_cost[c][r] = 0.0;
 
-				// T2TA ¸¦ ±æ°Ô ÇÑ°æ¿ì GMPHD cost (position) °¡ ³ô¾Æµµ KCF (appearance) ¾È´áÀº°Ç Á¦¿ÜÇÏ±â À§ÇÔ
+				// T2TA ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ñ°ï¿½ï¿½ GMPHD cost (position) ï¿½ï¿½ ï¿½ï¿½ï¿½Æµï¿½ KCF (appearance) ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (kcf_temp < CONF_LOWER_THRESH) kcf_cost[c][r] = 0.0;
 				else kcf_cost[c][r] = (kcf_cost[c][r] - mean_kcf_cost) / (stddev_kcf);
 
@@ -1242,7 +1241,7 @@ vector<double> GMPHD_MAF::FusionZScoreNorm(const int& nObs, const int& mStats,
 					continue;
 				}
 				// alternative cost using IOU instead of gmphd_cost when KCF cost is high
-				// GMPHD cost °¡ ³·¾Æµµ KCF ¸Å¿ì ´àÀº°Å³ª IOU°¡ ¸Å¿ì ³ôÀº °ÍÀº Æ÷ÇÔ½ÃÅ°±â À§ÇÔ
+				// GMPHD cost ï¿½ï¿½ ï¿½ï¿½ï¿½Æµï¿½ KCF ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Å³ï¿½ IOUï¿½ï¿½ ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ô½ï¿½Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (gmphd_cost[c][r] == 0 && (kcf_temp >= CONF_UPPER_THRESH || IOUs[r][c] >= IOU_UPPER_THRESH)) {
 					cost_fusion = IOUs[r][c] * kcf_cost[c][r];
 				}
@@ -1274,7 +1273,7 @@ vector<double> GMPHD_MAF::FusionZScoreNorm(const int& nObs, const int& mStats,
 					continue;
 				}
 				// alternative cost using IOU instead of gmphd_cost
-				// && ·Î ¹Ù²ãº¼±î -> || °¡ ´õ ÁÁÀ½
+				// && ï¿½ï¿½ ï¿½Ù²ãº¼ï¿½ï¿½ -> || ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (gmphd_cost[c][r] == 0 || IOUs[r][c] > IOU_LOWER_THRESH) {
 					cost_fusion = IOUs[r][c] * kcf_cost[c][r];
 				}
@@ -1334,7 +1333,7 @@ void GMPHD_MAF::FusionTanHNorm(const int& nObs, const int& mStats,
 
 				gmphd_cost[c][r] = 0.5*(std::tanh(0.01*(gmphd_cost[c][r] - mean_gmphd_cost) / (stddev_gmphd)) + 1);
 
-				// T2TA ¸¦ ±æ°Ô ÇÑ°æ¿ì GMPHD cost (position) °¡ ³ô¾Æµµ KCF (appearance) ¾È´áÀº°Ç Á¦¿ÜÇÏ±â À§ÇÔ
+				// T2TA ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ñ°ï¿½ï¿½ GMPHD cost (position) ï¿½ï¿½ ï¿½ï¿½ï¿½Æµï¿½ KCF (appearance) ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (kcf_temp < CONF_LOWER_THRESH) kcf_cost[c][r] = 0.0;
 				else kcf_cost[c][r] = 0.5*(std::tanh(0.01*(kcf_cost[c][r] - mean_kcf_cost) / (stddev_kcf)) + 1);
 
@@ -1342,7 +1341,7 @@ void GMPHD_MAF::FusionTanHNorm(const int& nObs, const int& mStats,
 				double cost_fusion = gmphd_cost[c][r] * kcf_cost[c][r];
 
 				// alternative cost using IOU instead of gmphd_cost when KCF cost is high
-				// GMPHD cost °¡ ³·¾Æµµ KCF ¸Å¿ì ´àÀº°Ç Æ÷ÇÔ½ÃÅ°±â À§ÇÔ
+				// GMPHD cost ï¿½ï¿½ ï¿½ï¿½ï¿½Æµï¿½ KCF ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ô½ï¿½Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (gmphd_temp == 0 && (kcf_temp >= CONF_UPPER_THRESH || IOUs[r][c] >= IOU_UPPER_THRESH)) {
 					cost_fusion = iou * kcf_cost[c][r];
 				}
@@ -1373,7 +1372,7 @@ void GMPHD_MAF::FusionTanHNorm(const int& nObs, const int& mStats,
 					continue;
 				}
 				// alternative cost using IOU instead of gmphd_cost
-				// && ·Î ¹Ù²ãº¼±î -> || °¡ ´õ ÁÁÀ½
+				// && ï¿½ï¿½ ï¿½Ù²ãº¼ï¿½ï¿½ -> || ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				if (gmphd_temp == 0 || iou > IOU_LOWER_THRESH) {
 					cost_fusion = iou * kcf_cost[c][r];
 				}
@@ -1473,8 +1472,8 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 		}
 	}
 
-	Concurrency::parallel_for(0, nObs, [&](int r) {
-		//for(int r=0;r<nObs;++r){
+	#pragma omp parallel for
+	for (int r = 0; r < nObs; ++r) {
 		for (int c = 0; c < stats_matrix[r].size(); ++c) {
 
 			int lostID = stats_matrix[r][c].id;
@@ -1485,7 +1484,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 
 			double Taff = 1.0;
 			int trk_fd = 0; // frame_difference
-			if (fd >= TRACK_ASSOCIATION_FRAME_DIFFERENCE && fd <= this->params.T2TA_MAX_INTERVAL) { // ==0 ÀÏ¶§´Â occlusion À» °¨¾ÈÇØ¾ß ÇÒµí ÀÏ´Ü >0 À¸·Î ÇØº¸ÀÚ
+			if (fd >= TRACK_ASSOCIATION_FRAME_DIFFERENCE && fd <= this->params.T2TA_MAX_INTERVAL) { // ==0 ï¿½Ï¶ï¿½ï¿½ï¿½ occlusion ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ ï¿½Òµï¿½ ï¿½Ï´ï¿½ >0 ï¿½ï¿½ï¿½ï¿½ ï¿½Øºï¿½ï¿½ï¿½
 
 				// Linear Motion Estimation
 				int idx_first = 0;
@@ -1571,15 +1570,14 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 			// Calculate the Affinity between detection (observations) and tracking (states)
 		}
 	}
-	);
 
 	// Calculate States' Weights by GMPHD filtering with q values
 	// Then the Cost Matrix is filled with States's Weights to solve Assignment Problem.
-	Concurrency::parallel_for(0, nObs, [&](int r) {
-		//for (int r = 0; r < nObs; ++r){
+	#pragma omp parallel for
+	for (int r = 0; r < nObs; ++r) {
 		int nStats = stats_matrix[r].size();
 		// (19)
-		double denominator = 0.0;													// (19)'s denominator(ºÐ¸ð)
+		double denominator = 0.0;													// (19)'s denominator(ï¿½Ð¸ï¿½)
 		for (int l = 0; l < stats_matrix[r].size(); ++l) {
 			denominator += (stats_matrix[r][l].weight * q_values[r][l]);
 		}
@@ -1595,7 +1593,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 				if ((double)(stats_matrix[r][c].weight) < (double)(FLT_MIN) / (double)10.0) {
 					std::cerr << "[" << iFrmCnt << "] weight(TW) < 0.1*FLT_MIN" << std::endl;
 					if (!AFFINITY_COST_L1_OR_L2_NORM_TW)	m_cost[c][r] = -1;
-					else									m_cost[c][r] = 10000;	// upper bound, ÀÛÁö¸¸ double·Î Ç¥Çö°¡´ÉÇÑ °ªÀÌ Á¸ÀçÇÏ¹Ç·Î association ÈÄº¸ÀÓ
+					else									m_cost[c][r] = 10000;	// upper bound, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ doubleï¿½ï¿½ Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¹Ç·ï¿½ association ï¿½Äºï¿½ï¿½ï¿½
 				}
 				else {
 					if (!AFFINITY_COST_L1_OR_L2_NORM_TW)	m_cost[c][r] = -1.0*Q_TH_LOW_10_INVERSE * numerator;
@@ -1604,7 +1602,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 			}
 			else {
 				if (!AFFINITY_COST_L1_OR_L2_NORM_TW)		m_cost[c][r] = 0;
-				else										m_cost[c][r] = 10000;	// upper bound, double·Îµµ Ç¥Çö ºÒ°¡´ÉÇÑ °ªÀÌ¹Ç·Î association ÈÄº¸Á¶Â÷ Á¦¿Ü
+				else										m_cost[c][r] = 10000;	// upper bound, doubleï¿½Îµï¿½ Ç¥ï¿½ï¿½ ï¿½Ò°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¹Ç·ï¿½ association ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			}
 
 			/*printf("(TW) Obs_id%d(%d,%d,%d,%d,%.4f) -> Stat_id%d:%.lf (n:%lf, q:%.20lf, W':%.5f)\n", \
@@ -1612,7 +1610,6 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 				stats_matrix[r][c].id, m_cost[c][r], numerator, q_values[r][c], stats_matrix[r][c].weight);*/
 		}
 	}
-	);
 
 	//imshow("KF in T2TA", tempVis);
 	//cv::waitKey(1);
@@ -1645,8 +1642,8 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 			}
 
 			vector<vector<BBTrk>> stats_dummy;
-			Concurrency::parallel_for(0, mStats, [&](int c) {
-				//for (int c = 0; c < mStats; ++c) {
+			#pragma omp parallel for
+			for (int c = 0; c < mStats; ++c) {
 					//cv::Mat framePrev = this->imgBatch[this->params.QUEUE_SIZE-2];
 				cv::Mat frameProc = img.clone(); // current frame considering latency
 
@@ -1664,7 +1661,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 					statResize.copyTo(canvasDA(cv::Rect(margin, margin + cellWH * c, 100, 100)));
 
 					char strIDConf[64];
-					sprintf_s(strIDConf, "ID%d (%.3f)", id_lost, stats_lost[c].conf);
+					sprintf(strIDConf, "ID%d (%.3f)", id_lost, stats_lost[c].conf);
 					cv::putText(canvasDA, string(strIDConf), cv::Point(margin, margin / 2 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id_lost / 2) % (MAX_OBJECTS - 1)], 2);
 					cv::putText(canvasDA, "~" + std::to_string(stats_lost[c].fn), cv::Point(margin, margin / 2 + cellWH * (c + 1) - 105), CV_FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id_lost / 2) % (MAX_OBJECTS - 1)], 2);
 				}
@@ -1783,14 +1780,14 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 								}
 								else {
 									char strINF_IOU[64];
-									sprintf_s(strINF_IOU, "INF (IOU:%.3f)", IOUs2D[r][c]);
+									sprintf(strINF_IOU, "INF (IOU:%.3f)", IOUs2D[r][c]);
 									cv::putText(canvasDA, strINF_IOU, cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 								}
 								cv::addWeighted(canvasDA(obsDAcell), 0.6, confMapResize, 0.4, 0.0, canvasDA(obsDAcell));
 								cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
 
 								char strIDConf[64];
-								sprintf_s(strIDConf, "ID%d(%.3f)", id_live, obss_live[r].conf);
+								sprintf(strIDConf, "ID%d(%.3f)", id_live, obss_live[r].conf);
 								cv::putText(canvasDA, string(strIDConf), cv::Point(margin + cellWH * (r + 1), margin - 45 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
 
 								confMap.release();
@@ -1824,14 +1821,14 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 								cv::resize(confMap, confMapResize, cv::Size(100, 100));
 
 								char strINF_IOU[64];
-								sprintf_s(strINF_IOU, "INF (IOU:%.3f)", IOUs2D[r][c]);
+								sprintf(strINF_IOU, "INF (IOU:%.3f)", IOUs2D[r][c]);
 								cv::putText(canvasDA, strINF_IOU, cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 
 								cv::addWeighted(canvasDA(obsDAcell), 0.6, confMapResize, 0.4, 0.0, canvasDA(obsDAcell));
 								cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
 
 								char strIDConf[64];
-								sprintf_s(strIDConf, "ID%d(%.3f)", id_live, obss_live[r].conf);
+								sprintf(strIDConf, "ID%d(%.3f)", id_live, obss_live[r].conf);
 								cv::putText(canvasDA, string(strIDConf), cv::Point(margin + cellWH * (r + 1), margin - 45 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
 
 								// Excluded in T2TA because of the last frame of the lost track > the first frame of the live track
@@ -1847,7 +1844,6 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 				}
 				frameProc.release();
 			}
-			);
 
 			// Fusing GMPHD and KCF scores
 			float CONF_LOWER_THRESH = this->params.KCF_BOUNDS_T2TA[0]; // used
@@ -2118,7 +2114,7 @@ void GMPHD_MAF::ArrangeRevivedTracklets(unordered_map<int, vector<BBTrk>>& track
 			int size_old = tracks[iterT->id_associated].size();
 			tracks[iterT->id_associated].insert(tracks[iterT->id_associated].end(), tracks[iterT->id].begin(), tracks[iterT->id].end());
 			int size_new = tracks[iterT->id_associated].size();
-			for (int i = size_old; i < size_new; ++i) {  // µÚ¿¡ »õ·Î ºÙÀº°ÍÀÇ ID¸¦ º¹¿ø½ÃÄÑÁÜ(associated µÈ lostTrkÀÇ °ÍÀ¸·Î)
+			for (int i = size_old; i < size_new; ++i) {  // ï¿½Ú¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ IDï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(associated ï¿½ï¿½ lostTrkï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
 				tracks[iterT->id_associated].at(i).id = iterT->id_associated;
 				tracks[iterT->id_associated].at(i).id_associated = iterT->id_associated;
 				tracks[iterT->id_associated].at(i).conf = iterT->conf;
@@ -2190,17 +2186,17 @@ void GMPHD_MAF::InitializeMatrices(cv::Mat &F, cv::Mat &Q, cv::Mat &Ps, cv::Mat 
 	if (MODEL_TYPE == sym::MODEL_VECTOR::XY) {
 		/* Initialize the transition matrix F, from state_t-1 to state_t
 
-		1	0  ¡ât	0
-		0	1	0  ¡ât
+		1	0  ï¿½ï¿½t	0
+		0	1	0  ï¿½ï¿½t
 		0	0	1	0
 		0	0	0	1
 
-		¡ât = ±¸Çö½Ã¿¡´Â ¡âframeÀ¸·Î Áï 1ÀÌ´Ù.
+		ï¿½ï¿½t = ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ ï¿½ï¿½frameï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ 1ï¿½Ì´ï¿½.
 		*/
 
 		F = cv::Mat::eye(dims_state, dims_state, CV_64FC1); // identity matrix
-		F.at<double>(0, 2) = 1.0;///30.0; // 30fps¶ó °¡Á¤, ³ªÁß¿¡ °è»êÇÒ¶§ St = St-1 + Vt-1¡ât (S : location) ¿¡¼­ 
-		F.at<double>(1, 3) = 1.0;///30.0; // Vt-1¡ât ÀÇÇØ 1/30 Àº »ç¶óÁø´Ù. Vt-1 (1frame´ç ÀÌµ¿ÇÈ¼¿ / 0.0333..), ¡ât = 0.0333...
+		F.at<double>(0, 2) = 1.0;///30.0; // 30fpsï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ß¿ï¿½ ï¿½ï¿½ï¿½ï¿½Ò¶ï¿½ St = St-1 + Vt-1ï¿½ï¿½t (S : location) ï¿½ï¿½ï¿½ï¿½ 
+		F.at<double>(1, 3) = 1.0;///30.0; // Vt-1ï¿½ï¿½t ï¿½ï¿½ï¿½ï¿½ 1/30 ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. Vt-1 (1frameï¿½ï¿½ ï¿½Ìµï¿½ï¿½È¼ï¿½ / 0.0333..), ï¿½ï¿½t = 0.0333...
 
 		Q = (cv::Mat_<double>(dims_state, dims_state) << \
 			VAR_X, 0, 0, 0, \
@@ -2279,7 +2275,7 @@ vector<BBDet> GMPHD_MAF::MergeDetInstances(vector<BBDet>& obss, const bool& IS_M
 
 			if (m_value >= sMERGE_TH) {
 
-				// Á¶°ÇºÎ ÀÎÁ¢ ¸®½ºÆ®
+				// ï¿½ï¿½ï¿½Çºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®
 				mergeIdxList[i].push_back(j);
 				mergeIdxList[j].push_back(i);
 
@@ -2469,7 +2465,7 @@ vector<BBTrk> GMPHD_MAF::MergeTrkInstances(vector<BBTrk>& stats, const float& sO
 
 					if (m_value >= sMERGE_TH) {
 
-						// Á¶°ÇºÎ ÀÎÁ¢ ¸®½ºÆ®
+						// ï¿½ï¿½ï¿½Çºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®
 						mergeIdxList[i].push_back(j);
 						mergeIdxList[j].push_back(i);
 
@@ -2666,7 +2662,7 @@ void GMPHD_MAF::MergeSegMasksRects(const vector<cv::Mat>& in_masks, const vector
 		i++;
 	}
 
-	// 0, 127-in_rects.size() µî ¿©·¯°¡Áö ¿É¼ÇÀÌ ÀÖÀ» ¼ö ÀÖ°Ú´Ù. -in_rects.size() ´Â CV_8UC ¸¦ ¼Ò¼öÁ¡ ¿¬»ê½Ã ¹ö¸®°ÔµÇ´Â Çö»ó ¶§¹®
+	// 0, 127-in_rects.size() ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½É¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö°Ú´ï¿½. -in_rects.size() ï¿½ï¿½ CV_8UC ï¿½ï¿½ ï¿½Ò¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ÔµÇ´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	double th = 255.0 * nR - in_rects.size();
 	cv::threshold(Mu, Mu, th, 255, cv::THRESH_BINARY);
 	if (!out_mask.empty()) out_mask.release();

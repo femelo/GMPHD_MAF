@@ -5,7 +5,6 @@
 * Licensed under the Simplified BSD License [see coco/license.txt]
 **************************************************************************/
 // https://github.com/philferriere/cocoapi/blob/master/common/maskApi.c
-#include "pch.h"
 #include "mask_api.h"
 
 uint umin(uint a, uint b) { return (a < b) ? a : b; }

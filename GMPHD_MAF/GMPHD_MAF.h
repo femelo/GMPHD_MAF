@@ -42,20 +42,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <list>
 //#include <map>
 #include <unordered_map>
-#include <ppl.h>
 #include <numeric>
 #include <functional>
 
-#include <boost\format.hpp>
-#include <io.h> // for 	_access()
+#include <boost/format.hpp>
 
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
-#include <opencv2\imgproc.hpp>
-// #include <opencv2\opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+// #include <opencv2/opencv.hpp>
 
 #include "drawing.hpp"
-// #include "io_mots.hpp" // 이걸 쓰는 순간 boost 와 충돌되는 라이브러리가 존재해 넘청난 에러를 발생시킨다.
+// #include "io_mots.hpp" // boost.
 
 /**
 * @brief	A Class for the GMPHD_MAF tracker

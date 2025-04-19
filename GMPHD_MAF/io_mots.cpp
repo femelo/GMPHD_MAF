@@ -32,7 +32,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "pch.h"
 #include "io_mots.hpp"
 
 
@@ -42,7 +41,7 @@ void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNA
 	// Scene Info Load.
 	vector<string> allLines;
 
-	if (_access(seqFile.c_str(), 0) == 0) {
+	if (boost::filesystem::exists(seqFile)) {
 		cout << "Scene Info is loaded from \""<< seqFile <<"\"."<< endl;
 		std::ifstream infile(seqFile);
 
@@ -58,36 +57,36 @@ void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNA
 			string detPath = "";
 			string trackGTPath = "";
 			if (DB_TYPE_MOT15 <= DB_TYPE && DB_TYPE <= DB_TYPE_MOT20) {
-				imgPath = dataHomeDIR + seqNAME + "\\img1\\";
-				detPath = dataHomeDIR + seqNAME + "\\det\\det.txt";
+				imgPath = dataHomeDIR + seqNAME + "/img1/";
+				detPath = dataHomeDIR + seqNAME + "/det/det.txt";
 				if (!MODE.compare("train"))
-					trackGTPath = dataHomeDIR + seqNAME + "\\gt\\gt.txt";
+					trackGTPath = dataHomeDIR + seqNAME + "/gt/gt.txt";
 			}
 			else if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS) {
-				imgPath = dataHomeDIR + "image_02\\" + seqNAME + "\\";
-				detPath = dataHomeDIR + "det_02_" + detNAME + "\\" + seqNAME + ".txt";
+				imgPath = dataHomeDIR + "image_02/" + seqNAME + "/";
+				detPath = dataHomeDIR + "det_02_" + detNAME + "/" + seqNAME + ".txt";
 				if (!MODE.compare("train")) {
 					if (DB_TYPE == DB_TYPE_KITTI)
-						trackGTPath = dataHomeDIR + "label_02\\" + seqNAME + ".txt";
+						trackGTPath = dataHomeDIR + "label_02/" + seqNAME + ".txt";
 					else if (DB_TYPE == DB_TYPE_KITTI_MOTS)
-						trackGTPath = dataHomeDIR + "instance_02\\" + seqNAME + ".txt";
+						trackGTPath = dataHomeDIR + "instance_02/" + seqNAME + ".txt";
 				}
 			}
 			else if (DB_TYPE == DB_TYPE_MOTS20) {
-				imgPath = dataHomeDIR + seqNAME + "\\";
-				detPath = dataHomeDIR + detNAME + "\\" + seqNAME + ".txt";
+				imgPath = dataHomeDIR + seqNAME + "/";
+				detPath = dataHomeDIR + detNAME + "/" + seqNAME + ".txt";
 				if (!MODE.compare("train")) {
-					trackGTPath = dataHomeDIR + "instances_txt\\" + seqNAME + ".txt";
+					trackGTPath = dataHomeDIR + "instances_txt/" + seqNAME + ".txt";
 				}
 			}
 			cout <<"    "<< sq++ << ": " << seqNAME << endl;
 			seqNames.push_back(seqNAME);
-			if (_access(imgPath.c_str(), 0) == 0)	seqPaths.push_back(imgPath);
+			if boost::filesystem::exists(imgPath)	seqPaths.push_back(imgPath);
 			else									cout << imgPath << " doesn't exist!! (1)" << endl;
-			if (_access(detPath.c_str(), 0) == 0)	detTxts.push_back(detPath);
+			if boost::filesystem::exists(detPath)	detTxts.push_back(detPath);
 			else									cout << detPath << " doesn't exist!! (2)" << endl;
 			if (!MODE.compare("train")) {
-				if (_access(trackGTPath.c_str(), 0) == 0)	trkTxtsGT.push_back(trackGTPath);
+				if boost::filesystem::exists(trackGTPath)	trkTxtsGT.push_back(trackGTPath);
 				else										cout << trackGTPath << " doesn't exist!! (3)" << endl;
 			}
 		}
@@ -96,7 +95,7 @@ void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNA
 		printf("%s doesn't exist!! (4)\n", seqFile.c_str());
 	}
 	// Paramter load.
-	if (_access(paramsFile.c_str(), 0) == 0) {
+	if (boost::filesystem::exists(paramsFile)) {
 
 		cout << "Scene parameters are loaded from \"" << paramsFile << "\"." << endl;
 		std::ifstream infile(paramsFile);
@@ -179,7 +178,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const s
 
 	VECx2xBBDet detsSeq_out;
 
-	if (_access(detTxt.c_str(), 0)) {
+	if (boost::filesystem::exists(detTxt)) {
 		cout << "[ERROR] Detection file does not exist!\n" << endl;
 	}
 	else { // if (_access(detTxt.c_str(),0)==0) {
@@ -351,7 +350,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const s
 VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const string& trkTxt, VECx2xBBTrk& carTrks, VECx2xBBTrk& personTrks, cv::Mat& carHeatMap, cv::Mat& perHeatMap) {
 	VECx2xBBTrk trksSeq_out;
 
-	if (_access(trkTxt.c_str(), 0)) {
+	if (boost::filesystem::exists(trkTxt)) {
 		cout << "[ERROR] Tracking file does not exist!\n" << endl;
 	}
 	else { // if (_access(trkTxt.c_str(),0)==0) {
@@ -549,15 +548,15 @@ vector<string> SortAllDetections(const vector<string>& allLines, int DB_TYPE) {
 		T(string s, int DB_TYPE) {
 			line = s;
 
-			char tok[8];
+			std::string tok_str; // Use std::string
 			if (DB_TYPE == DB_TYPE_MOT15 || DB_TYPE == DB_TYPE_MOT17 || DB_TYPE == DB_TYPE_MOT20) {
-				strcpy_s(tok, ", ");
+				tok_str = ", ";
 			}
 			if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS || DB_TYPE == DB_TYPE_MOTS20) {
-				strcpy_s(tok, " ");
+				tok_str = " ";
 			}
 
-			boost::char_separator<char> bTok(tok);
+			boost::char_separator<char> bTok(tok_str.c_str());
 
 			boost::tokenizer < boost::char_separator<char>>tokens(s, bTok);
 			vector<string> vals;
@@ -609,33 +608,33 @@ void SaveResultImgs(const int& DB_TYPE, const string& MODE, const string& detNAM
 	char folderPath[256], filePath[256];// , filePathINTP[256];
 
 	if (DB_TYPE == DB_TYPE_MOT15) {
-		sprintf_s(folderPath, 256, "img\\MOT15\\%s\\%s\\%s\\%s", MODE.c_str(), detNAME.c_str(), seqNAME.c_str(), strThDetConf.c_str());
-		//sprintf_s(filePathINTP, 256, "res\\MOT15\\%s\\_speed.txt", MODE);
+		sprintf(folderPath, "img/MOT15/%s/%s/%s/%s", MODE.c_str(), detNAME.c_str(), seqNAME.c_str(), strThDetConf.c_str());
+		//sprintf(filePathINTP, "res/MOT15/%s/_speed.txt", MODE);
 	}
 	else if (DB_TYPE == DB_TYPE_MOT17) {
-		sprintf_s(folderPath, 256, "img\\MOT17\\%s\%s\\%s\\%s", MODE.c_str(), detNAME.c_str(), seqNAME.c_str(), strThDetConf.c_str());
-		//sprintf_s(filePathINTP, 256, "res\\MOT17\\%s\\_speed.txt", MODE);
+		sprintf(folderPath, "img/MOT17/%s/%s/%s", MODE.c_str(), detNAME.c_str(), seqNAME.c_str(), strThDetConf.c_str());
+		//sprintf(filePathINTP, "res/MOT17/%s/_speed.txt", MODE);
 	}
 	else if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS) {
-		sprintf_s(folderPath, 256, "img\\KITTI\\%s\\%s", MODE.c_str(), seqNAME.c_str());
-		//sprintf_s(filePathINTP, 256, "res\\KITTI\\%s\\%s\\%s_intp\\_speed.txt", MODE, detNAME, strThDetConf);
+		sprintf(folderPath, "img/KITTI/%s/%s", MODE.c_str(), seqNAME.c_str());
+		//sprintf(filePathINTP, "res/KITTI/%s/%s/%s_intp/_speed.txt", MODE, detNAME, strThDetConf);
 	}
 	else if (DB_TYPE == DB_TYPE_MOTS20) {
-		sprintf_s(folderPath, 256, "img\\MOTS20\\%s\\%s", MODE.c_str(), seqNAME.c_str());
-		//sprintf_s(filePathINTP, 256, "res\\MOTSChallenge\\%s\\%s\\%s_intp\\_speed.txt", MODE, detNAME, strThDetConf);
+		sprintf(folderPath, "img/MOTS20/%s/%s", MODE.c_str(), seqNAME.c_str());
+		//sprintf(filePathINTP, "res/MOTSChallenge/%s/%s/%s_intp/_speed.txt", MODE, detNAME, strThDetConf);
 	}
 
 	//cout << folderPath << endl;
 	if (!boost::filesystem::exists(folderPath)) {
 		boost::filesystem::create_directory(folderPath);
 	}
-	sprintf_s(folderPath, 256, "%s\\%s", folderPath, tag.c_str());
+	sprintf(folderPath, "%s/%s", folderPath, tag.c_str());
 	if (!boost::filesystem::exists(folderPath)) {
 		boost::filesystem::create_directory(folderPath);
 		cout << folderPath << " is created." << endl;
 	}
 
-	sprintf_s(filePath, 256, "%s\\%.5d.jpg", folderPath, iFrmCnt);
+	sprintf(filePath, "%s/%.5d.jpg", folderPath, iFrmCnt);
 
 	cv::imwrite(filePath, img);
 }
@@ -749,7 +748,7 @@ void CvtRleSTR2MAT(const std::string &in_maskRleSTR, const cv::Size& in_segImgSz
 	byte *mask = new byte[frmSize * 1];
 
 	char *s = new char[nSize];
-	sprintf_s(s, nSize, "%s", rleStr.c_str());
+	sprintf(s, nSize, "%s", rleStr.c_str());
 	rleFrString(&rleTemp, s, segImgH, segImgW);
 	rleDecode(&rleTemp, mask, 1);
 	uint a = 0;

@@ -32,7 +32,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "pch.h"
 #include "drawing.hpp"
 
 
@@ -385,7 +384,7 @@ void DrawDetBB(cv::Mat& img, int iter, cv::Rect bb, double conf, double conf_th,
 
 		/// Draw Observation ID (not target ID)
 		char cArrObsID[8];
-		sprintf_s(cArrObsID, 8, "%d", iter);
+		sprintf(cArrObsID, "%d", iter);
 		cv::putText(img, cArrObsID, cvPoint(bb.x + 5, bb.y + 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, color, 2);
 	}
 	else {
@@ -398,7 +397,7 @@ void DrawDetBB(cv::Mat& img, int iter, cv::Rect bb, double conf, double conf_th,
 void DrawFrameNumberAndFPS(int iFrameCnt, cv::Mat& img, double scale, int thick, int frameOffset, int frames_skip_interval, double sec) {
 	// Draw Frame Number
 	char frameCntBuf[8];
-	sprintf_s(frameCntBuf, 8, "%d", (iFrameCnt + frameOffset) / frames_skip_interval);
+	sprintf(frameCntBuf, "%d", (iFrameCnt + frameOffset) / frames_skip_interval);
 	cv::putText(img, frameCntBuf, cv::Point(10, 65), CV_FONT_HERSHEY_SIMPLEX, scale, cvScalar(255, 255, 255), thick);
 
 	// Draw Frames Per Second
@@ -413,7 +412,7 @@ void cvPrintMat(cv::Mat matrix, std::string name)
 {
 	/*
 	<Mat::type()>
-	depth¿¡ channels±îÁö Æ÷ÇÔÇÏ´Â °³³ä ex. CV_64FC1
+	depthï¿½ï¿½ channelsï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ex. CV_64FC1
 	<Mat::depth()>
 	CV_8U - 8-bit unsigned integers ( 0..255 )
 	CV_8S - 8-bit signed integers ( -128..127 )

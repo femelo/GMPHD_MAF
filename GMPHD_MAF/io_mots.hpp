@@ -32,7 +32,8 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#pragma once
+#ifndef IO_MOTS_HPP
+#define IO_MOTS_HPP
 
 #include <fstream>
 #include <iostream>
@@ -41,15 +42,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
+// #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <io.h>
+// #include <io.h>
 
-#include "utils.hpp"
+#include "params.hpp"
 #include "mask_api.h"
-
-#include <ppl.h>
 
 using namespace std;
 using namespace boost::filesystem;
@@ -77,3 +76,6 @@ std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz
 int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::Size& frm_sz, const float& DET_SCORE_TH = 0.0);
 void CvtRleSTR2MAT(const std::string &in_maskRleSTR, const cv::Size& in_segImgSz, cv::Mat& out_maskMAT, cv::Rect& out_objRec);
 cv::Rect CvtMAT2RECT(const cv::Size& in_segImgSz, const cv::Mat& in_maskMAT);
+
+#endif // IO_MOTS_HPP
+// End of file
