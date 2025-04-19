@@ -32,7 +32,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-include "drawing.hpp"
+#include "drawing.hpp"
 #include <opencv2/core.hpp>     // Needed for CV_Assert, cv::Mat, etc.
 #include <opencv2/imgproc.hpp>  // Needed for cv::applyColorMap, cv::cvtColor
 #include <opencv2/highgui.hpp>  // Potentially needed if cv::imshow etc. were used
