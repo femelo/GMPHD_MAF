@@ -33,12 +33,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "OnlineTracker.h"
+#include <opencv2/core.hpp> // For imshow, waitKey if needed in .cpp
+#include <opencv2/highgui.hpp> // For imshow, waitKey if needed in .cpp
 #include <opencv2/video/tracking.hpp> // For cv::KalmanFilter
 #include <boost/geometry.hpp>
+#include <boost/geometry/geometries/adapted/boost_tuple.hpp>
 
 // BOOST_GEOMETRY_REGISTER_C_ARRAY_CS(cs::cartesian)
-typedef bootst::geometry::model::d2::point_xy<float> Point2D;
-typedef boost::geometry::model::range<Point2D> Range2D;
+typedef boost::geometry::model::d2::point_xy<float> Point2D;
+typedef boost::geometry::model::multi_point<Point2D> MultiPoint2D;
 typedef boost::geometry::model::polygon<Point2D> Polygon2D;
 
 OnlineTracker::OnlineTracker() {}
@@ -169,24 +172,49 @@ std::vector<std::vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const s
 void OnlineTracker::InitColorTab()
 {
 	int a;
-	for (a = 1; a*a*a < MAX_OBJECTS; a++);
-	int n = 255 / (a - 1);
-	IplImage *temp = cvCreateImage(cvSize(40 * (MAX_OBJECTS), 32), IPL_DEPTH_8U, 3);
-	cvSet(temp, CV_RGB(0, 0, 0));
+	// Find the smallest cube root 'a' such that a^3 >= MAX_OBJECTS
+	for (a = 1; a * a * a < MAX_OBJECTS; a++);
+
+	// Calculate the color step size 'n'
+	// Avoid division by zero if a=1 (MAX_OBJECTS=1)
+	int n = (a > 1) ? 255 / (a - 1) : 255;
+
+	// --- C++ API Visualization (Optional, kept similar to original logic) ---
+	// If you need to visualize the color palette later, you can use cv::Mat
+	// cv::Mat temp_vis = cv::Mat::zeros(cv::Size(40 * MAX_OBJECTS, 32), CV_8UC3);
+	// --- End Visualization ---
+
 	for (int i = 0; i < a; i++) {
 		for (int j = 0; j < a; j++) {
 			for (int k = 0; k < a; k++) {
-				//if(i*a*a+j*a+k>MAX_OBJECTS) break;
-				//printf("%d:(%d,%d,%d)\n",i*a*a +j*a+k,i*n,j*n,k*n);
-				if (i*a*a + j * a + k == MAX_OBJECTS) break;
-				color_tab[i*a*a + j * a + k] = CV_RGB(i*n, j*n, k*n);
-				cvLine(temp, cvPoint((i*a*a + j * a + k) * 40 + 20, 0), cvPoint((i*a*a + j * a + k) * 40 + 20, 32), CV_RGB(i*n, j*n, k*n), 32);
+				int index = i * a * a + j * a + k;
+				if (index >= MAX_OBJECTS) break; // Use >= for safety
+
+				// CV_RGB(i*n, j*n, k*n) maps to cv::Scalar(blue, green, red)
+				// So, blue=k*n, green=j*n, red=i*n
+				color_tab[index] = cv::Scalar(k * n, j * n, i * n);
+
+				// --- C++ API Visualization (Optional) ---
+				// cv::Point pt1((index * 40) + 20, 0);
+				// cv::Point pt2((index * 40) + 20, 32);
+				// cv::line(temp_vis, pt1, pt2, color_tab[index], 32);
+				// --- End Visualization ---
 			}
+			// Optimization: check if the inner loop break is sufficient
+            int next_j_start_index = i * a * a + (j + 1) * a;
+            if (next_j_start_index >= MAX_OBJECTS) break;
 		}
+        // Optimization: check if the middle loop break is sufficient
+        int next_i_start_index = (i + 1) * a * a;
+        if (next_i_start_index >= MAX_OBJECTS) break;
 	}
-	//cvShowImage("(private)Color tap", temp);
-	cvWaitKey(1);
-	cvReleaseImage(&temp);
+
+	// --- C++ API Visualization (Optional) ---
+	// cv::imshow("(private)Color tap C++", temp_vis);
+	// cv::waitKey(1); // Keep waitKey if imshow is used or needed elsewhere
+	// --- End Visualization ---
+
+	// No need for cvReleaseImage with cv::Mat
 }
 
 void OnlineTracker::InitImagesQueue(int width, int height) {
@@ -304,21 +332,23 @@ float OnlineTracker::CalcIOU(const cv::Rect& Ra, const cv::Rect& Rb) {
 */
 float OnlineTracker::Calc3DIOU(std::vector<cv::Vec3f> Ca, cv::Vec3f Da, std::vector<cv::Vec3f> Cb, cv::Vec3f Db) {
 
-	Range2D pointsA;
-	pointsA.push_back(Point2D({Ca[0][0],Ca[0][2]}));
-	pointsA.push_back(Point2D({Ca[1][0],Ca[1][2]}));
-	pointsA.push_back(Point2D({Ca[2][0],Ca[2][2]}));
-	pointsA.push_back(Point2D({Ca[3][0],Ca[3][2]}));
-	pointsA.push_back(Point2D({Ca[0][0],Ca[0][2]}));
+	MultiPoint2D pointsA = {
+		{Ca[0][0], Ca[0][2]},
+		{Ca[1][0], Ca[1][2]},
+		{Ca[2][0], Ca[2][2]},
+		{Ca[3][0], Ca[3][2]},
+		{Ca[0][0], Ca[0][2]}
+	};
 	Polygon2D polyA;
 	boost::geometry::append(polyA, pointsA);
 
-	Range2D pointsB;
-	pointsB.push_back(Point2D({Cb[0][0],Cb[0][2]}));
-	pointsB.push_back(Point2D({Cb[1][0],Cb[1][2]}));
-	pointsB.push_back(Point2D({Cb[2][0],Cb[2][2]}));
-	pointsB.push_back(Point2D({Cb[3][0],Cb[3][2]}));
-	pointsB.push_back(Point2D({Cb[0][0],Cb[0][2]}));
+	MultiPoint2D pointsB = {
+		{Cb[0][0], Cb[0][2]},
+		{Cb[1][0], Cb[1][2]},
+		{Cb[2][0], Cb[2][2]},
+		{Cb[3][0], Cb[3][2]},
+		{Cb[0][0], Cb[0][2]}
+	};
 	Polygon2D polyB;
 	boost::geometry::append(polyB, pointsB);
 
