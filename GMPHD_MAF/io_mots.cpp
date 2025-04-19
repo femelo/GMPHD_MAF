@@ -181,15 +181,15 @@ std::vector<std::string> ReadFilesInPath(boost::filesystem::path p) {
 
 	std::vector<std::string> pathVec;
 
-	std::filesystem::directory_iterator end_itr;
+	boost::filesystem::directory_iterator end_itr;
 
 	// cycle through the directory
-	for (std::filesystem::directory_iterator itr(p); itr != end_itr; ++itr)
+	for (boost::filesystem::directory_iterator itr(p); itr != end_itr; ++itr)
 	{
 		// If it's not a directory, list it. If you want to list directories too, just remove this check.
-		if (is_regular_file(itr->path())) {
+		if (boost::filesystem::is_regular_file(itr->path())) {
 			// assign current file name to current_file and echo it out to the console.
-			std::string current_file = itr->path().std::string();
+			std::string current_file = itr->path().string();
 			pathVec.push_back(current_file);
 		}
 	}
