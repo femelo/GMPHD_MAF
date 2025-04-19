@@ -36,7 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DRAWING_HPP
 
 #include "local_types.hpp"
-
+#include "params.hpp"
+#include "drawing.hpp"
 
 // user-define funcstions for drawing
 void InitColorMapTab(cv::Mat& color_map, cv::Scalar* color_tab);

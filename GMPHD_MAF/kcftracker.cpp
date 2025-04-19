@@ -81,13 +81,11 @@ the use of this software, even if advised of the possibility of such damage.
  */
 #pragma once
 
-#ifndef _KCFTRACKER_HEADERS
 #include "kcftracker.hpp"
 #include "ffttools.hpp"
 #include "recttools.hpp"
 #include "fhog.hpp"
 #include "labdata.hpp"
-#endif
 
 // Constructor
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, bool roi_only)

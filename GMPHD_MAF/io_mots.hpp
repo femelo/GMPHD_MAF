@@ -35,39 +35,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef IO_MOTS_HPP
 #define IO_MOTS_HPP
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
+
 #include <string>
 #include <vector>
 
 #include <boost/filesystem.hpp>
-// #include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include "params.hpp"
-#include "mask_api.h"
-
-using namespace std;
-using namespace boost::filesystem;
 
 // User-defined functions for I/O,..
 
 // Read
-void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNAME, const string& seqFile, const string& paramsFile,
-	vector<string>& seqNames, vector<string>& seqPaths, vector<string>& detTxts, vector<string>& trkTxtsGT, vector<MOTparams>& params_out);
-vector<string> ReadFilesInPath(boost::filesystem::path p);
-VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const string& detTxt,
+void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqFile, const std::string& paramsFile,
+	std::vector<std::string>& seqNames, std::vector<std::string>& seqPaths, std::vector<std::string>& detTxts, std::vector<std::string>& trkTxtsGT, std::vector<MOTparams>& params_out);
+std::vector<std::string> ReadFilesInPath(boost::filesystem::path p);
+VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, const std::string& detTxt,
 	VECx2xBBDet& carDets, VECx2xBBDet& personDets);
-VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const string& trkTxt,
+VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const std::string& trkTxt,
 	VECx2xBBTrk& carTrks, VECx2xBBTrk& persoTrks, cv::Mat& carHeatMap, cv::Mat& perHeatMap);
 // The Function for Sorting Detection Responses by frame number (ascending order)
-vector<string> SortAllDetections(const vector<string>& allLines, int DB_TYPE = DB_TYPE_MOT17);
+std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLines, int DB_TYPE = DB_TYPE_MOT17);
 
 // Write
-void SaveResultImgs(const int& DB_TYPE, const string& MODE, const string& detNAME, const string& seqNAME,
-	const int& iFrmCnt, const cv::Mat& img, const float& ths_det = 0.0, const string& tag = "");
+void SaveResultImgs(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqNAME,
+	const int& iFrmCnt, const cv::Mat& img, const float& ths_det = 0.0, const std::string& tag = "");
 
 // Convert, divide, interpolate
 // convert

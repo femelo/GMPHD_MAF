@@ -97,6 +97,8 @@ public:
 	// ����ȭ �ɼ� (simple):	false, true, false, false, false (1.3~1.4 �� �� ����)
 	/// bool hog = false, bool fixed_window = true, bool multiscale = false, bool lab = false, bool roi_only = false
 	KCFTracker(bool hog = true, bool fixed_window = true, bool multiscale = false, bool lab = true, bool roi_only = false);
+	// Destructor
+	~KCFTracker() {};
 
     // Initialize tracker 
     virtual void init(const cv::Mat& image, const cv::Rect &roi, const cv::Mat &mask = cv::Mat(), const bool& USE_MASK = false);

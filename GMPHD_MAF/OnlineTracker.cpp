@@ -33,51 +33,56 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "OnlineTracker.h"
+#include <opencv2/video/tracking.hpp> // For cv::KalmanFilter
+#include <boost/geometry.hpp>
 
 // BOOST_GEOMETRY_REGISTER_C_ARRAY_CS(cs::cartesian)
 typedef boost::geometry::model::polygon<boost::geometry::model::d2::point_xy<float> > Polygon2D;
 
-OnlineTracker::OnlineTracker()
-{
+OnlineTracker::OnlineTracker() {}
 
-}
+OnlineTracker::~OnlineTracker() {}
 
-
-OnlineTracker::~OnlineTracker()
-{
-}
 void OnlineTracker::SetParams(const struct MOTparams params) {
 	this->params = params;
 	this->trackObjType = params.OBJ_TYPE;
 	this->InitializeTrackletsContainters();
 }
-string OnlineTracker::GetSeqName() {
+
+std::string OnlineTracker::GetSeqName() {
 	return this->seqName;
 }
-void OnlineTracker::SetSeqName(const string seqName) {
+
+void OnlineTracker::SetSeqName(const std::string seqName) {
 	this->seqName = seqName;
 }
+
 struct MOTparams OnlineTracker::GetParams() {
 	return this->params;
 }
+
 void  OnlineTracker::SetTotalFrames(int nFrames) {
 	this->iTotalFrames = nFrames;
 }
+
 int  OnlineTracker::GetTotalFrames() {
 	return this->iTotalFrames;
 }
+
 void OnlineTracker::SetObjType(int type) {
 	this->trackObjType = type;
 }
+
 int OnlineTracker::GetObjType() {
 	return this->trackObjType;
 }
-vector<vector<int>> OnlineTracker::HungarianMethod(vector<vector<double>>& costMatrix, const int& nObs, const int& nStats) {
 
-	vector<vector<int>> assigns;
-	assigns.resize(nObs, std::vector<int>(nStats, 0));
+std::vector<std::vector<int>> OnlineTracker::HungarianMethod(std::vector<std::vector<double>>& costMatrix, const int& nObs, const int& nStats) {
 
-	vector<int> assignment;
+	std::vector<std::vector<int>> assigns;
+	assigns.resize(nObs, std::std::vector<int>(nStats, 0));
+
+	std::vector<int> assignment;
 	this->HungAlgo.iFrmCnt = this->sysFrmCnt;
 	double cost = this->HungAlgo.Solve(costMatrix, assignment);
 
@@ -87,7 +92,8 @@ vector<vector<int>> OnlineTracker::HungarianMethod(vector<vector<double>>& costM
 	}
 	return assigns;
 }
-vector<vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const vector<vector<double>>& sparseMatrix, vector<vector<double>>& denseMatrix,
+
+std::vector<std::vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const std::vector<std::vector<double>>& sparseMatrix, std::vector<std::vector<double>>& denseMatrix,
 	const double& sparse_value) {
 	/*
 	Convert sparse cost matrix to be dense. (it may boost Association speed)
@@ -99,8 +105,8 @@ vector<vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const vector<vect
 	const int mStats = sparseMatrix.size();
 	const int nObs = sparseMatrix[0].size();
 
-	vector<bool> rows_sparsity(mStats, true);
-	vector<bool> cols_sparsity(nObs, true);
+	std::vector<bool> rows_sparsity(mStats, true);
+	std::vector<bool> cols_sparsity(nObs, true);
 
 	int m2_i = 0;
 	for (const auto& row : sparseMatrix) {	// states
@@ -117,7 +123,7 @@ vector<vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const vector<vect
 		}
 	}
 
-	vector<int> trans_row, trans_col;
+	std::vector<int> trans_row, trans_col;
 	int si = 0;
 	for (const auto& row : rows_sparsity) { // state
 
@@ -137,10 +143,10 @@ vector<vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const vector<vect
 
 	// index: source indices (sparse matrix: m2)
 	// value: translated indices (dense matrix: m1)
-	vector<vector<cv::Vec2i>> trans_idx_matrix; // m2 to m1
-	trans_idx_matrix.resize(trans_row.size(), std::vector<cv::Vec2i>(trans_col.size()));
+	std::vector<std::vector<cv::Vec2i>> trans_idx_matrix; // m2 to m1
+	trans_idx_matrix.resize(trans_row.size(), std::std::vector<cv::Vec2i>(trans_col.size()));
 
-	denseMatrix.resize(trans_row.size(), std::vector<double>(trans_col.size()));
+	denseMatrix.resize(trans_row.size(), std::std::vector<double>(trans_col.size()));
 
 	si = 0;
 	for (auto& row : trans_idx_matrix) {
@@ -157,6 +163,7 @@ vector<vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const vector<vect
 
 	return trans_idx_matrix;
 }
+
 void OnlineTracker::InitColorTab()
 {
 	int a;
@@ -179,6 +186,7 @@ void OnlineTracker::InitColorTab()
 	cvWaitKey(1);
 	cvReleaseImage(&temp);
 }
+
 void OnlineTracker::InitImagesQueue(int width, int height) {
 	this->imgBatch = new cv::Mat[this->params.QUEUE_SIZE];
 	for (int i = 0; i < this->params.QUEUE_SIZE; i++) {
@@ -188,8 +196,9 @@ void OnlineTracker::InitImagesQueue(int width, int height) {
 	this->frmWidth = width;
 	this->frmHeight = height;
 }
+
 void OnlineTracker::UpdateImageQueue(const cv::Mat img, int Q_SIZE) {
-	// Keep the images and observations into vector array within the recent this->params.TRACK_MIN_SIZE frames 
+	// Keep the images and observations into std::vector array within the recent this->params.TRACK_MIN_SIZE frames 
 
 	for (int q = 0; q < Q_SIZE - 1; q++) {
 		imgBatch[q + 1].copyTo(imgBatch[q]);
@@ -197,13 +206,15 @@ void OnlineTracker::UpdateImageQueue(const cv::Mat img, int Q_SIZE) {
 	img.copyTo(imgBatch[Q_SIZE - 1]);
 
 }
+
 // Initialized the STL Containters for Online Tracker
 void OnlineTracker::InitializeTrackletsContainters() {
-	this->detsBatch = new std::vector<BBDet>[this->params.TRACK_MIN_SIZE];
-	this->liveTracksBatch = new std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
-	this->lostTracksBatch = new std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
-	this->groupsBatch = new std::unordered_map<int, std::vector<RectID>>[this->params.GROUP_QUEUE_SIZE];
+	this->detsBatch = new std::std::vector<BBDet>[this->params.TRACK_MIN_SIZE];
+	this->liveTracksBatch = new std::std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
+	this->lostTracksBatch = new std::std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
+	this->groupsBatch = new std::unordered_map<int, std::std::vector<RectID>>[this->params.GROUP_QUEUE_SIZE];
 }
+
 cv::Point2f OnlineTracker::CalcSegMaskCenter(const cv::Rect& rec, const cv::Mat& mask) {
 	cv::Point2f cp_seg(0, 0);
 	int nPoints = 0;
@@ -228,6 +239,7 @@ cv::Point2f OnlineTracker::CalcSegMaskCenter(const cv::Rect& rec, const cv::Mat&
 
 	return cp_seg;
 }
+
 double OnlineTracker::CalcGaussianProbability(const int dims, const cv::Mat x, const cv::Mat mean, cv::Mat& cov) {
 	double probability = -1.0;
 	//cout << x.rows << " " << mean.rows << " " << cov.rows << "x" << cov.cols << ":" << dims << endl;
@@ -288,7 +300,7 @@ float OnlineTracker::CalcIOU(const cv::Rect& Ra, const cv::Rect& Rb) {
 * @return		float	The intersection-over-union between two 3D boxes (cuoids) which are measured with Volume
 * @throws
 */
-float OnlineTracker::Calc3DIOU(vector<cv::Vec3f> Ca, cv::Vec3f Da, vector<cv::Vec3f> Cb, cv::Vec3f Db) {
+float OnlineTracker::Calc3DIOU(std::vector<cv::Vec3f> Ca, cv::Vec3f Da, std::vector<cv::Vec3f> Cb, cv::Vec3f Db) {
 
 	float pointsA[5][2] = { {Ca[0][0],Ca[0][2]},{ Ca[1][0],Ca[1][2] },{ Ca[2][0],Ca[2][2] },{ Ca[3][0],Ca[3][2] },{ Ca[0][0],Ca[0][2] } };
 	Polygon2D polyA;
@@ -298,10 +310,10 @@ float OnlineTracker::Calc3DIOU(vector<cv::Vec3f> Ca, cv::Vec3f Da, vector<cv::Ve
 	Polygon2D polyB;
 	boost::geometry::append(polyB, pointsB);
 
-	std::vector<Polygon2D> in;
+	std::std::vector<Polygon2D> in;
 	boost::geometry::intersection(polyA, polyB, in);
 
-	//std::vector<Polygon2D> un;
+	//std::std::vector<Polygon2D> un;
 	// boost::geometry::union_(gp, dp, un);
 	//double union_area = boost::geometry::area(un.front());
 
@@ -318,6 +330,7 @@ float OnlineTracker::Calc3DIOU(vector<cv::Vec3f> Ca, cv::Vec3f Da, vector<cv::Ve
 
 	return IOU_3D;
 }
+
 float OnlineTracker::CalcSIOA(cv::Rect Ra, cv::Rect Rb) {
 	// check overlapping region
 	float Ua = (float)(Ra & Rb).area() / (float)Ra.area();
@@ -327,6 +340,7 @@ float OnlineTracker::CalcSIOA(cv::Rect Ra, cv::Rect Rb) {
 
 	return SIOA;
 }
+
 float OnlineTracker::CalcMIOU(const cv::Rect& Ri, const cv::Mat& Si, const cv::Rect& Rj, const cv::Mat& Sj, cv::Mat& mask_union) {
 
 	float iou = (float)(Ri&Rj).area() / (float)(Ri | Rj).area();
@@ -381,6 +395,7 @@ float OnlineTracker::CalcMIOU(const cv::Rect& Ri, const cv::Mat& Si, const cv::R
 
 	return siou;
 }
+
 bool OnlineTracker::IsOutOfFrame(cv::Rect obj_rec, int fWidth, int fHeight, int margin_x, int margin_y) {
 	cv::Rect obj = obj_rec;
 	cv::Rect frm(margin_x, margin_y, fWidth - 2 * margin_x, fHeight - 2 * margin_y);
@@ -395,17 +410,19 @@ bool OnlineTracker::IsOutOfFrame(cv::Rect obj_rec, int fWidth, int fHeight, int 
 	else
 		return false;
 }
+
 bool OnlineTracker::IsPointInRect(cv::Point pt, cv::Rect rec) {
 
 	return (pt.x >= rec.x) && (pt.x < rec.x + rec.width) && (pt.y >= rec.y) && (pt.y < rec.y + rec.height);
 }
-void OnlineTracker::DrawTrkBBS(cv::Mat& img, cv::Rect rec, cv::Scalar color, int thick, int id, double fontScale, string type, bool idBGinBB) {
+
+void OnlineTracker::DrawTrkBBS(cv::Mat& img, cv::Rect rec, cv::Scalar color, int thick, int id, double fontScale, std::string type, bool idBGinBB) {
 
 
 	if ((int)id >= 0) {
-		string strID;
-		if (type.empty())	strID = to_string(id);
-		else				strID = type.substr(0, 2) + ":" + to_string(id);
+		std::string strID;
+		if (type.empty())	strID = to_std::string(id);
+		else				strID = type.substr(0, 2) + ":" + to_std::string(id);
 
 		int idNChars = 0;
 		if (id == 0)	idNChars = 0;
@@ -470,6 +487,7 @@ void OnlineTracker::DrawTrkBBS(cv::Mat& img, cv::Rect rec, cv::Scalar color, int
 		}
 	}
 }
+
 // Rect Region Correction for preventing out of frame
 cv::Rect OnlineTracker::RectExceptionHandling(int fWidth, int fHeight, cv::Rect rect) {
 
@@ -493,6 +511,7 @@ cv::Rect OnlineTracker::RectExceptionHandling(int fWidth, int fHeight, cv::Rect 
 
 	return rect;
 }
+
 cv::Rect OnlineTracker::RectExceptionHandling(const int& fWidth, const int& fHeight, cv::Point p1, cv::Point p2) {
 
 	cv::Rect rect;
@@ -512,7 +531,8 @@ cv::Rect OnlineTracker::RectExceptionHandling(const int& fWidth, const int& fHei
 
 	return rect;
 }
-void OnlineTracker::cvPrintMat(cv::Mat matrix, string name)
+
+void OnlineTracker::cvPrintMat(cv::Mat matrix, std::string name)
 {
 	/*
 	<Mat::type()>
@@ -553,7 +573,8 @@ void OnlineTracker::cvPrintMat(cv::Mat matrix, string name)
 	}
 
 }
-void OnlineTracker::cvPrintVec2Vec(const vector<vector<double>>& costs, const string& name)
+
+void OnlineTracker::cvPrintVec2Vec(const std::vector<std::vector<double>>& costs, const std::string& name)
 {
 	printf("Matrix %s=\n", name.c_str());
 	for (const auto& row : costs) {
@@ -563,7 +584,8 @@ void OnlineTracker::cvPrintVec2Vec(const vector<vector<double>>& costs, const st
 		printf("\n");
 	}
 }
-void OnlineTracker::cvPrintVec2Vec(const vector<vector<int>>& costs, const string& name)
+
+void OnlineTracker::cvPrintVec2Vec(const std::vector<std::vector<int>>& costs, const std::string& name)
 {
 	printf("Matrix %s=\n", name.c_str());
 	for (const auto& row : costs) {
@@ -573,7 +595,8 @@ void OnlineTracker::cvPrintVec2Vec(const vector<vector<int>>& costs, const strin
 		printf("\n");
 	}
 }
-void OnlineTracker::cvPrintVec2Vec(const vector<vector<cv::Vec2i>>& costs, const string& name)
+
+void OnlineTracker::cvPrintVec2Vec(const std::vector<std::vector<cv::Vec2i>>& costs, const std::string& name)
 {
 	printf("Matrix %s=\n", name.c_str());
 	for (const auto& row : costs) {
@@ -583,7 +606,8 @@ void OnlineTracker::cvPrintVec2Vec(const vector<vector<cv::Vec2i>>& costs, const
 		printf("\n");
 	}
 }
-void OnlineTracker::cvPrintVec2Vec(const vector<vector<bool>>& assigns, const string& name)
+
+void OnlineTracker::cvPrintVec2Vec(const std::vector<std::vector<bool>>& assigns, const std::string& name)
 {
 	printf("Matrix %s=\n", name.c_str());
 	for (const auto& row : assigns) {
@@ -593,15 +617,17 @@ void OnlineTracker::cvPrintVec2Vec(const vector<vector<bool>>& assigns, const st
 		printf("\n");
 	}
 }
-string  OnlineTracker::cvPrintRect(const cv::Rect& rec) {
+
+std::string  OnlineTracker::cvPrintRect(const cv::Rect& rec) {
 
 	char carr[256];
 	sprintf(carr, "(%d,%d,%d,%d)", rec.x, rec.y, rec.width, rec.height);
 	//printf("(%.2f,%.2f,%.2f,%.2f)");
 
-	return string(carr);
+	return std::string(carr);
 }
-cv::Mat OnlineTracker::cvPerspectiveTrans2Rect(const cv::Mat img, const vector<cv::Point2f> corners, const cv::Vec3f dims, float ry) {
+
+cv::Mat OnlineTracker::cvPerspectiveTrans2Rect(const cv::Mat img, const std::vector<cv::Point2f> corners, const cv::Vec3f dims, float ry) {
 	// https://blog.naver.com/PostView.nhn?blogId=pckbj123&logNo=100205803400&proxyReferer=https%3A%2F%2Fwww.google.com%2F
 	/*
 	0	1
@@ -685,8 +711,9 @@ cv::Mat OnlineTracker::cvPerspectiveTrans2Rect(const cv::Mat img, const vector<c
 	/*========================================================================================================================================*/
 	return dstImgDisplay;
 }
-void OnlineTracker::CollectTracksbyID(unordered_map<int, vector<BBTrk>>& tracksbyID, vector<BBTrk>& targets, bool isInit) {
-	pair< unordered_map<int, vector<BBTrk>>::iterator, bool> isEmpty;
+
+void OnlineTracker::CollectTracksbyID(unordered_map<int, std::vector<BBTrk>>& tracksbyID, std::vector<BBTrk>& targets, bool isInit) {
+	pair< unordered_map<int, std::vector<BBTrk>>::iterator, bool> isEmpty;
 	if (isInit) {
 		for (int j = 0; j < targets.size(); j++)
 		{
@@ -695,10 +722,10 @@ void OnlineTracker::CollectTracksbyID(unordered_map<int, vector<BBTrk>>& tracksb
 			int id = targets.at(j).id;
 
 			if (targets.at(j).isNew && targets.at(j).isAlive) { // only add new tracks
-				vector<BBTrk> tracklet;
+				std::vector<BBTrk> tracklet;
 				tracklet.push_back(targets.at(j));
 
-				pair< unordered_map<int, vector<BBTrk>>::iterator, bool> isEmpty = tracksbyID.insert(unordered_map<int, vector<BBTrk>>::value_type(id, tracklet));
+				pair< unordered_map<int, std::vector<BBTrk>>::iterator, bool> isEmpty = tracksbyID.insert(unordered_map<int, std::vector<BBTrk>>::value_type(id, tracklet));
 
 				if (isEmpty.second == false) { // already has a element with target.at(j).id
 					tracksbyID[id].push_back(targets.at(j));
@@ -724,10 +751,10 @@ void OnlineTracker::CollectTracksbyID(unordered_map<int, vector<BBTrk>>& tracksb
 			if (targets.at(j).isAlive) {
 				// targets.at(j).fn = this->sysFrmCnt; // �̰� �� �ȳѾ� ������ �̽��׸���, ��.. prediction ���� framenumber�� update �������..
 
-				vector<BBTrk> tracklet;
+				std::vector<BBTrk> tracklet;
 				tracklet.push_back(targets.at(j));
 
-				pair< unordered_map<int, vector<BBTrk>>::iterator, bool> isEmpty = tracksbyID.insert(unordered_map<int, vector<BBTrk>>::value_type(id, tracklet));
+				pair< unordered_map<int, std::vector<BBTrk>>::iterator, bool> isEmpty = tracksbyID.insert(unordered_map<int, std::vector<BBTrk>>::value_type(id, tracklet));
 
 				if (isEmpty.second == false) { // already has a element with target.at(j).id
 					tracksbyID[id].push_back(targets.at(j));
@@ -742,25 +769,26 @@ void OnlineTracker::CollectTracksbyID(unordered_map<int, vector<BBTrk>>& tracksb
 		}
 	}
 }
-void OnlineTracker::ClearOldEmptyTracklet(int current_fn, unordered_map<int, vector<BBTrk>>& tracklets, int MAXIMUM_OLD) {
 
-	unordered_map<int, vector<BBTrk>> recent_tracks;
+void OnlineTracker::ClearOldEmptyTracklet(int current_fn, unordered_map<int, std::vector<BBTrk>>& tracklets, int MAXIMUM_OLD) {
 
-	vector<int> keys_old_vec;
-	unordered_map<int, vector<BBTrk>>::iterator iter;
+	unordered_map<int, std::vector<BBTrk>> recent_tracks;
+
+	std::vector<int> keys_old_vec;
+	unordered_map<int, std::vector<BBTrk>>::iterator iter;
 
 	for (iter = tracklets.begin(); iter != tracklets.end(); ++iter) {
 
 		if (!iter->second.empty()) {
 			if (iter->second.back().fn >= current_fn - MAXIMUM_OLD) {
 
-				vector<BBTrk> track;
+				std::vector<BBTrk> track;
 
-				vector<BBTrk>::iterator iterT;
+				std::vector<BBTrk>::iterator iterT;
 				for (iterT = iter->second.begin(); iterT != iter->second.end(); ++iterT)
 					track.push_back(iterT[0]);
 
-				pair<unordered_map<int, vector<BBTrk>>::iterator, bool> isEmpty = recent_tracks.insert(unordered_map<int, vector<BBTrk>>::value_type(iter->first, track));
+				pair<unordered_map<int, std::vector<BBTrk>>::iterator, bool> isEmpty = recent_tracks.insert(unordered_map<int, std::vector<BBTrk>>::value_type(iter->first, track));
 
 				if (isEmpty.second == false) { // already exists
 
@@ -792,7 +820,8 @@ void OnlineTracker::ClearOldEmptyTracklet(int current_fn, unordered_map<int, vec
 	recent_tracks.clear();
 
 }
-cv::Vec4f OnlineTracker::LinearMotionEstimation(vector<BBTrk> tracklet, int& idx1_2_fd, int& idx1, int& idx2, \
+
+cv::Vec4f OnlineTracker::LinearMotionEstimation(std::vector<BBTrk> tracklet, int& idx1_2_fd, int& idx1, int& idx2, \
 	int MODEL_TYPE, int reverse_offset, int required_Q_size) {
 	int idx_last, idx_first;
 
@@ -835,7 +864,8 @@ cv::Vec4f OnlineTracker::LinearMotionEstimation(vector<BBTrk> tracklet, int& idx
 		return v;
 	}
 }
-cv::Vec4f OnlineTracker::LinearMotionEstimation(unordered_map<int, vector<BBTrk>> tracks, int id, int &idx1_2_fd, int& idx1, int& idx2, \
+
+cv::Vec4f OnlineTracker::LinearMotionEstimation(unordered_map<int, std::vector<BBTrk>> tracks, int id, int &idx1_2_fd, int& idx1, int& idx2, \
 	int MODEL_TYPE, int reverse_offset, int required_Q_size) {
 
 	int idx_last, idx_first;
@@ -877,6 +907,7 @@ cv::Vec4f OnlineTracker::LinearMotionEstimation(unordered_map<int, vector<BBTrk>
 	}
 
 }
+
 BBTrk OnlineTracker::KalmanMotionbasedPrediction(BBTrk lostStat, BBTrk liveObs) {
 
 	int fd = liveObs.fn - lostStat.fn;
@@ -884,7 +915,7 @@ BBTrk OnlineTracker::KalmanMotionbasedPrediction(BBTrk lostStat, BBTrk liveObs) 
 	cv::Mat stateMat(4, 1, CV_32FC1);
 	cv::KalmanFilter stateKF = cv::KalmanFilter(4, 2, 0);
 
-	// statePre, mean (state vector in KalmanFilter), variable, init
+	// statePre, mean (state std::vector in KalmanFilter), variable, init
 	stateKF.statePost.at<float>(0, 0) = (float)lostStat.rec.x + (float)(lostStat.rec.width) / 2.0;
 	stateKF.statePost.at<float>(1, 0) = (float)lostStat.rec.y + (float)(lostStat.rec.height) / 2.0;
 	stateKF.statePost.at<float>(2, 0) = lostStat.vx;
@@ -955,10 +986,12 @@ BBTrk OnlineTracker::KalmanMotionbasedPrediction(BBTrk lostStat, BBTrk liveObs) 
 
 	return statePredRes;
 }
+
 cv::Point OnlineTracker::cvtRect2Point(const cv::Rect rec) {
 
 	return cv::Point(rec.x + rec.width / 2.0, rec.y + rec.height / 2.0);
 }
+
 bool OnlineTracker::CopyCovMatDiag(const cv::Mat src, cv::Mat& dst) {
 	if (src.rows != dst.rows || src.cols != dst.cols) {
 		cerr << "src.rows!=dst.rows || src.cols != dst.cols" << endl;
@@ -982,9 +1015,10 @@ bool OnlineTracker::CopyCovMatDiag(const cv::Mat src, cv::Mat& dst) {
 		return true;
 	}
 }
-void OnlineTracker::NormalizeWeight(vector<BBDet>& detVec) {
+
+void OnlineTracker::NormalizeWeight(std::vector<BBDet>& detVec) {
 	// Weight normalization
-	std::vector<BBDet>::iterator iterD;
+	std::std::vector<BBDet>::iterator iterD;
 	float sumConfs = 0.0;
 	for (iterD = detVec.begin(); iterD != detVec.end(); ++iterD)
 	{
@@ -1001,12 +1035,13 @@ void OnlineTracker::NormalizeWeight(vector<BBDet>& detVec) {
 		}
 	}
 }
-void OnlineTracker::NormalizeWeight(vector<vector<BBDet>>& detVecs) {
+
+void OnlineTracker::NormalizeWeight(std::vector<std::vector<BBDet>>& detVecs) {
 	// Weight normalization
 	float sumConfs = 0.0;
 
 	for (auto& detVec : detVecs) {
-		std::vector<BBDet>::iterator iterD;
+		std::std::vector<BBDet>::iterator iterD;
 
 		for (iterD = detVec.begin(); iterD != detVec.end(); ++iterD)
 		{
@@ -1014,7 +1049,7 @@ void OnlineTracker::NormalizeWeight(vector<vector<BBDet>>& detVecs) {
 		}
 	}
 	for (auto& detVec : detVecs) {
-		std::vector<BBDet>::iterator iterD;
+		std::std::vector<BBDet>::iterator iterD;
 		if (sumConfs > 0.0) {
 			for (iterD = detVec.begin(); iterD != detVec.end(); iterD++) {
 				iterD->weight = iterD->confidence / sumConfs;
@@ -1027,7 +1062,8 @@ void OnlineTracker::NormalizeWeight(vector<vector<BBDet>>& detVecs) {
 		}
 	}
 }
-void OnlineTracker::NormalizeCostVec2Vec(vector<vector<double>>& m_cost, double& min_cost, double& max_cost, const int& MODEL_TYPE) {
+
+void OnlineTracker::NormalizeCostVec2Vec(std::vector<std::vector<double>>& m_cost, double& min_cost, double& max_cost, const int& MODEL_TYPE) {
 	const int nObs = m_cost[0].size();
 	const int mStats = m_cost.size();
 
@@ -1051,6 +1087,7 @@ void OnlineTracker::NormalizeCostVec2Vec(vector<vector<double>>& m_cost, double&
 		int r_min = -1, c_min = -1;
 	}
 }
+
 cv::Rect OnlineTracker::MergeRect(const cv::Rect A, const cv::Rect B, const float a) {
 	cv::Rect rec;
 	rec.x = a * A.x + (1.0 - a)*B.x;
@@ -1060,7 +1097,8 @@ cv::Rect OnlineTracker::MergeRect(const cv::Rect A, const cv::Rect B, const floa
 
 	return rec;
 }
-cv::Rect OnlineTracker::MergeMultiRect(const vector<cv::Rect> recs) {
+
+cv::Rect OnlineTracker::MergeMultiRect(const std::vector<cv::Rect> recs) {
 	cv::Rect res;
 
 	return res;

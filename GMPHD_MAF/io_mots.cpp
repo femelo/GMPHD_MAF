@@ -32,20 +32,27 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 #include "io_mots.hpp"
+#include "params.hpp"
+#include "mask_api.h"
 
 
-void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNAME, const string& seqFile, const string& paramsFile,
-	vector<string>& seqNames, vector<string>& seqPaths, vector<string>& detTxts, vector<string>& trkTxtsGT, vector<MOTparams>& params_out) {
+void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqFile, const std::string& paramsFile,
+	std::vector<std::string>& seqNames, std::vector<std::string>& seqPaths, std::vector<std::string>& detTxts, std::vector<std::string>& trkTxtsGT, std::vector<MOTparams>& params_out) {
 
 	// Scene Info Load.
-	vector<string> allLines;
+	std::vector<std::string> allLines;
 
 	if (boost::filesystem::exists(seqFile)) {
 		cout << "Scene Info is loaded from \""<< seqFile <<"\"."<< endl;
 		std::ifstream infile(seqFile);
 
-		string seqNAME, dataHomeDIR;
+		std::string seqNAME, dataHomeDIR;
 		if (getline(infile, seqNAME)) {
 			dataHomeDIR = seqNAME;// The first line indicates dataset's root location.
 		}
@@ -53,9 +60,9 @@ void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNA
 		int sq = 1;
 		while (getline(infile, seqNAME)) {
 
-			string imgPath = "";
-			string detPath = "";
-			string trackGTPath = "";
+			std::string imgPath = "";
+			std::string detPath = "";
+			std::string trackGTPath = "";
 			if (DB_TYPE_MOT15 <= DB_TYPE && DB_TYPE <= DB_TYPE_MOT20) {
 				imgPath = dataHomeDIR + seqNAME + "/img1/";
 				detPath = dataHomeDIR + seqNAME + "/det/det.txt";
@@ -102,16 +109,16 @@ void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNA
 
 		params_out.resize(2);// if the file exists,
 
-		string param_line;		
+		std::string param_line;		
 		int p;
 		while (getline(infile, param_line)) {
 
 			boost::char_separator<char> bTok(": ");
 			boost::tokenizer < boost::char_separator<char>>tokens(param_line, bTok);
-			vector<string> vals;
+			std::vector<std::string> vals;
 			for (const auto& t : tokens) vals.push_back(t);
 
-			string cls_tmp = vals[1].substr(0, 3);
+			std::string cls_tmp = vals[1].substr(0, 3);
 			std::transform(cls_tmp.begin(), cls_tmp.end(), cls_tmp.begin(), std::tolower);
 
 			int obj_type;
@@ -119,13 +126,13 @@ void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNA
 			else if (!cls_tmp.compare("ped"))	obj_type = 2;// sym::OBJECT_TYPE::PEDESTRIAN;
 			else					obj_type = sym::OBJECT_TYPE::MISC;
 			//cout << cls_tmp <<endl;
-			vector<float> params;
+			std::vector<float> params;
 
 			for (p = 0; p < 13; ++p) {
 				if(!getline(infile, param_line)) break;
 
 				boost::tokenizer < boost::char_separator<char>>tokens(param_line, bTok);
-				vector<string> vals;
+				std::vector<std::string> vals;
 				for (const auto& t : tokens) vals.push_back(t);
 				float val = boost::lexical_cast<float>(vals[1]);
 				//cout << vals[0] <<": "<< vals[1] << endl;
@@ -156,9 +163,9 @@ void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNA
 		printf("%s doesn't exist!! (5)\n", paramsFile.c_str());
 	}
 }
-vector<string> ReadFilesInPath(path p) {
+std::vector<std::string> ReadFilesInPath(path p) {
 
-	vector<string> pathVec;
+	std::vector<std::string> pathVec;
 
 	directory_iterator end_itr;
 
@@ -168,13 +175,13 @@ vector<string> ReadFilesInPath(path p) {
 		// If it's not a directory, list it. If you want to list directories too, just remove this check.
 		if (is_regular_file(itr->path())) {
 			// assign current file name to current_file and echo it out to the console.
-			string current_file = itr->path().string();
+			std::string current_file = itr->path().std::string();
 			pathVec.push_back(current_file);
 		}
 	}
 	return pathVec;
 }
-VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const string& detTxt, VECx2xBBDet& carDets, VECx2xBBDet& personDets) {
+VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, const std::string& detTxt, VECx2xBBDet& carDets, VECx2xBBDet& personDets) {
 
 	VECx2xBBDet detsSeq_out;
 
@@ -184,10 +191,10 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const s
 	else { // if (_access(detTxt.c_str(),0)==0) {
 			//cout << "[WORK] Detection file path have been loaded." << endl;
 
-		vector<string> detLines;
+		std::vector<std::string> detLines;
 
 		std::ifstream infile(detTxt);
-		string line;
+		std::string line;
 
 		while (!infile.eof()) {
 			getline(infile, line);
@@ -196,9 +203,9 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const s
 		}
 		detLines = SortAllDetections(detLines, DB_TYPE);
 
-		// Convert Strings into vector<BBDet>
-		vector<BBDet> detsFrmAll, detsFrmCar, detsFrmPerson;
-		vector<string>::iterator itLines;
+		// Convert Strings into std::vector<BBDet>
+		std::vector<BBDet> detsFrmAll, detsFrmCar, detsFrmPerson;
+		std::vector<std::string>::iterator itLines;
 		int iFrmCnt = sym::FRAME_OFFSETS[DB_TYPE];
 		int detFrmCnt = 0;
 		int det_id = 0;
@@ -212,7 +219,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const s
 
 			boost::tokenizer < boost::char_separator<char>>tokens(detSTR, bTok);
 
-			vector<string> vals;
+			std::vector<std::string> vals;
 			for (const auto& t : tokens)
 			{
 				vals.push_back(t);
@@ -237,7 +244,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const s
 				/// Detection File Format in the KITTI-MOTS and MOTSChallenge Benchmark
 				// token: " "
 
-				// [frame bbox(x1, y1, x2, y2) score class_id img_width img_height rle ReID_association_vector(A 128-D Feature Vector)
+				// [frame bbox(x1, y1, x2, y2) score class_id img_width img_height rle ReID_association_std::vector(A 128-D Feature Vector)
 				// "%d / %f %f %f %f / %f / %d / %d %d / %s / 128 %f\n"
 
 				// class_id
@@ -347,7 +354,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const s
 
 	return detsSeq_out;
 }
-VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const string& trkTxt, VECx2xBBTrk& carTrks, VECx2xBBTrk& personTrks, cv::Mat& carHeatMap, cv::Mat& perHeatMap) {
+VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const std::string& trkTxt, VECx2xBBTrk& carTrks, VECx2xBBTrk& personTrks, cv::Mat& carHeatMap, cv::Mat& perHeatMap) {
 	VECx2xBBTrk trksSeq_out;
 
 	if (boost::filesystem::exists(trkTxt)) {
@@ -356,10 +363,10 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const strin
 	else { // if (_access(trkTxt.c_str(),0)==0) {
 			//cout << "[WORK] Trkection file path have been loaded." << endl;
 
-		vector<string> trkLines;
+		std::vector<std::string> trkLines;
 
 		std::ifstream infile(trkTxt);
-		string line;
+		std::string line;
 
 		while (!infile.eof()) {
 			getline(infile, line);
@@ -368,9 +375,9 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const strin
 		}
 		//trkLines = SortAllTrkections(trkLines, DB_TYPE);
 
-		// Convert Strings into vector<BBTrk>
-		vector<BBTrk> trksFrmAll;
-		vector<string>::iterator itLines;
+		// Convert Strings into std::vector<BBTrk>
+		std::vector<BBTrk> trksFrmAll;
+		std::vector<std::string>::iterator itLines;
 		int iFrmCnt = sym::FRAME_OFFSETS[DB_TYPE];
 		int trkFrmCnt = 0;
 		for (const auto& trkSTR : trkLines) {
@@ -383,7 +390,7 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const strin
 
 			boost::tokenizer < boost::char_separator<char>>tokens(trkSTR, bTok);
 
-			vector<string> vals;
+			std::vector<std::string> vals;
 			for (const auto& t : tokens)
 			{
 				vals.push_back(t);
@@ -537,18 +544,18 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const strin
 
 	return trksSeq_out;
 }
-vector<string> SortAllDetections(const vector<string>& allLines, int DB_TYPE) {
+std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLines, int DB_TYPE) {
 	// ascending sort by frame number
-	/// http://azza.tistory.com/entry/STL-vector-%EC%9D%98-%EC%A0%95%EB%A0%AC
+	/// http://azza.tistory.com/entry/STL-std::vector-%EC%9D%98-%EC%A0%95%EB%A0%AC
 
 	class T {
 	public:
 		int frameNum;
-		string line;
-		T(string s, int DB_TYPE) {
+		std::string line;
+		T(std::string s, int DB_TYPE) {
 			line = s;
 
-			std::string tok_str; // Use std::string
+			std::std::string tok_str; // Use std::std::string
 			if (DB_TYPE == DB_TYPE_MOT15 || DB_TYPE == DB_TYPE_MOT17 || DB_TYPE == DB_TYPE_MOT20) {
 				tok_str = ", ";
 			}
@@ -559,7 +566,7 @@ vector<string> SortAllDetections(const vector<string>& allLines, int DB_TYPE) {
 			boost::char_separator<char> bTok(tok_str.c_str());
 
 			boost::tokenizer < boost::char_separator<char>>tokens(s, bTok);
-			vector<string> vals;
+			std::vector<std::string> vals;
 			for (const auto& t : tokens)
 			{
 				vals.push_back(t);
@@ -572,20 +579,20 @@ vector<string> SortAllDetections(const vector<string>& allLines, int DB_TYPE) {
 	};
 
 
-	// Reconstruct the vector<T> from vector<string> for sorting
-	vector<T> tempAllLines;
-	vector<string>::const_iterator iter = allLines.begin();
+	// Reconstruct the std::vector<T> from std::vector<std::string> for sorting
+	std::vector<T> tempAllLines;
+	std::vector<std::string>::const_iterator iter = allLines.begin();
 	for (; iter != allLines.end(); iter++) {
 		if (iter[0].size() < 2) continue;
 
 		tempAllLines.push_back(T(iter[0], DB_TYPE));
 	}
-	// Sort the vector<T> by frame number
+	// Sort the std::vector<T> by frame number
 	std::sort(tempAllLines.begin(), tempAllLines.end());
 
-	// Copy the sorted vector<T> to vector<string>
-	vector<string> sortedAllLines;
-	vector<T>::iterator iterT = tempAllLines.begin();
+	// Copy the sorted std::vector<T> to std::vector<std::string>
+	std::vector<std::string> sortedAllLines;
+	std::vector<T>::iterator iterT = tempAllLines.begin();
 	for (; iterT != tempAllLines.end(); iterT++) {
 
 		sortedAllLines.push_back(iterT[0].line);
@@ -593,9 +600,9 @@ vector<string> SortAllDetections(const vector<string>& allLines, int DB_TYPE) {
 
 	return sortedAllLines;
 }
-void SaveResultImgs(const int& DB_TYPE, const string& MODE, const string& detNAME, const string& seqNAME, const int& iFrmCnt, const cv::Mat& img, const float& ths_det, const string& tag) {
+void SaveResultImgs(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqNAME, const int& iFrmCnt, const cv::Mat& img, const float& ths_det, const std::string& tag) {
 	
-	std::string strThDetConf;
+	std::std::string strThDetConf;
 	float DET_MIN_CONF = ths_det;// sym::DET_SCORE_THS[iDET_TH] / DET_SCORE_TH_SCALE - DET_SCORE_ALPHA;
 	if (DET_MIN_CONF <= 0.9 || DET_MIN_CONF == 1.0)
 		strThDetConf = boost::str(boost::format("%.1f") % (DET_MIN_CONF));
@@ -644,7 +651,7 @@ int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::S
 	int nValidObjs = 0;
 
 	for (auto& detFrm : in_dets) {
-		vector<BBDet> detsFrm_trunc;
+		std::vector<BBDet> detsFrm_trunc;
 
 		int nDets = detFrm.size();
 		Concurrency::parallel_for(0, nDets, [&](int d) {
@@ -684,8 +691,8 @@ int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::S
 
 	return nValidObjs;
 }
-// Convert "cv::Mat mask" to "std::string Rle Encoded mask"
-std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz, const cv::Rect& bbox, const bool& viewDetail) {
+// Convert "cv::Mat mask" to "std::std::string Rle Encoded mask"
+std::std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz, const cv::Rect& bbox, const bool& viewDetail) {
 
 	int frmW = in_frmImgSz.width;
 	int frmH = in_frmImgSz.height;
@@ -721,17 +728,17 @@ std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz
 	if (viewDetail) printf("(5)");
 	char *maskCharPtr = rleToString(&maskRLE);
 	if (viewDetail) printf("(6)");
-	return string(maskCharPtr);
+	return std::string(maskCharPtr);
 }
-// Convert  "std::string Rle Encoded mask" to "cv::Mat mask"
-void CvtRleSTR2MAT(const std::string &in_maskRleSTR, const cv::Size& in_segImgSz, cv::Mat& out_maskMAT, cv::Rect& out_objRec) {
+// Convert  "std::std::string Rle Encoded mask" to "cv::Mat mask"
+void CvtRleSTR2MAT(const std::std::string &in_maskRleSTR, const cv::Size& in_segImgSz, cv::Mat& out_maskMAT, cv::Rect& out_objRec) {
 
 	// Decode a run-length data
-	string rleStr = in_maskRleSTR;
+	std::string rleStr = in_maskRleSTR;
 
-	//wstring relStr_w;			// unicode
+	//wstd::string relStr_w;			// unicode
 	//relStr_w.assign(rleStr.begin(), rleStr.end());
-	//string rleStrUTF8 = boost::locale::conv::utf_to_utf<char>(rleStr);
+	//std::string rleStrUTF8 = boost::locale::conv::utf_to_utf<char>(rleStr);
 	//cout << rleStr << endl;
 	//cout << rleStrUTF8 << endl;
 	//cout << relStr_w << endl; // "를 인식하네, 어쨌든 안됨

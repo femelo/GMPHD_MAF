@@ -39,9 +39,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp> // For image processing functions if needed
+#include <opencv2/highgui.hpp> // For imshow, waitKey if needed in .cpp
+#include <opencv2/video/tracking.hpp> // For cv::KalmanFilter
 
 #include "GMPHD_MAF.h"
+#include "kcftracker.hpp"
 #include "drawing.hpp"
 #include "params.hpp"
 #include "io_mots.hpp"

@@ -75,7 +75,7 @@ endif()
 target_include_directories(  # Use target_include_directories for better scoping
     ${PROJECT_NAME}          # Apply includes to the target defined below
     # Add other include paths here if necessary
-    PUBLIC /usr/include/x86_64-linux-gnu/sys/ # System includes
+    # PUBLIC /usr/include/x86_64-linux-gnu/sys/ # System includes
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/GMPHD_MAF # If headers are alongside sources
 )
 
