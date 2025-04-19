@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <string>
 #include <vector>
+#include <boost/filesystem.hpp>
 #include "io_mots.hpp"
 #include "params.hpp"
 #include "mask_api.h"
@@ -49,14 +50,14 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 	std::vector<std::string> allLines;
 
 	if (boost::filesystem::exists(seqFile)) {
-		cout << "Scene Info is loaded from \""<< seqFile <<"\"."<< endl;
+		std::cout << "Scene Info is loaded from \""<< seqFile <<"\"."<< std::endl;
 		std::ifstream infile(seqFile);
 
 		std::string seqNAME, dataHomeDIR;
 		if (getline(infile, seqNAME)) {
 			dataHomeDIR = seqNAME;// The first line indicates dataset's root location.
 		}
-		cout << "  "<< dataHomeDIR << endl;
+		std::cout << "  "<< dataHomeDIR << std::endl;
 		int sq = 1;
 		while (getline(infile, seqNAME)) {
 
@@ -71,7 +72,7 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 			}
 			else if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS) {
 				imgPath = dataHomeDIR + "image_02/" + seqNAME + "/";
-				detPath = dataHomeDIR + "det_02_" + detNAME + "/" + seqNAME + ".txt";
+				detPath = dataHomeDIR + "det_02/" + detNAME + "/" + seqNAME + ".txt";
 				if (!MODE.compare("train")) {
 					if (DB_TYPE == DB_TYPE_KITTI)
 						trackGTPath = dataHomeDIR + "label_02/" + seqNAME + ".txt";
@@ -86,15 +87,21 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 					trackGTPath = dataHomeDIR + "instances_txt/" + seqNAME + ".txt";
 				}
 			}
-			cout <<"    "<< sq++ << ": " << seqNAME << endl;
+			std::cout <<"    "<< sq++ << ": " << seqNAME << std::endl;
 			seqNames.push_back(seqNAME);
-			if boost::filesystem::exists(imgPath)	seqPaths.push_back(imgPath);
-			else									cout << imgPath << " doesn't exist!! (1)" << endl;
-			if boost::filesystem::exists(detPath)	detTxts.push_back(detPath);
-			else									cout << detPath << " doesn't exist!! (2)" << endl;
+			if (boost::filesystem::exists(imgPath))
+				seqPaths.push_back(imgPath);
+			else
+				std::cout << imgPath << " doesn't exist!! (1)" << std::endl;
+			if (boost::filesystem::exists(detPath))
+				detTxts.push_back(detPath);
+			else
+				std::cout << detPath << " doesn't exist!! (2)" << std::endl;
 			if (!MODE.compare("train")) {
-				if boost::filesystem::exists(trackGTPath)	trkTxtsGT.push_back(trackGTPath);
-				else										cout << trackGTPath << " doesn't exist!! (3)" << endl;
+				if (boost::filesystem::exists(trackGTPath))
+					trkTxtsGT.push_back(trackGTPath);
+				else
+					std::cout << trackGTPath << " doesn't exist!! (3)" << std::endl;
 			}
 		}
 	}
@@ -104,10 +111,10 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 	// Paramter load.
 	if (boost::filesystem::exists(paramsFile)) {
 
-		cout << "Scene parameters are loaded from \"" << paramsFile << "\"." << endl;
+		std::cout << "Scene parameters are loaded from \"" << paramsFile << "\"." << std::endl;
 		std::ifstream infile(paramsFile);
 
-		params_out.resize(2);// if the file exists,
+		params_out.ret_size(2);// if the file exists,
 
 		std::string param_line;		
 		int p;
@@ -116,26 +123,32 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 			boost::char_separator<char> bTok(": ");
 			boost::tokenizer < boost::char_separator<char>>tokens(param_line, bTok);
 			std::vector<std::string> vals;
-			for (const auto& t : tokens) vals.push_back(t);
+			for (const auto& t : tokens)
+				vals.push_back(t);
 
 			std::string cls_tmp = vals[1].substr(0, 3);
 			std::transform(cls_tmp.begin(), cls_tmp.end(), cls_tmp.begin(), std::tolower);
 
 			int obj_type;
-			if (!cls_tmp.compare("car"))		obj_type = 1;// sym::OBJECT_TYPE::CAR;
-			else if (!cls_tmp.compare("ped"))	obj_type = 2;// sym::OBJECT_TYPE::PEDESTRIAN;
-			else					obj_type = sym::OBJECT_TYPE::MISC;
-			//cout << cls_tmp <<endl;
+			if (!cls_tmp.compare("car"))
+				obj_type = 1;// sym::OBJECT_TYPE::CAR;
+			else if (!cls_tmp.compare("ped"))
+				obj_type = 2;// sym::OBJECT_TYPE::PEDESTRIAN;
+			else
+				obj_type = sym::OBJECT_TYPE::MISC;
+			//std::cout << cls_tmp <<std::endl;
 			std::vector<float> params;
 
 			for (p = 0; p < 13; ++p) {
-				if(!getline(infile, param_line)) break;
+				if (!getline(infile, param_line))
+					break;
 
 				boost::tokenizer < boost::char_separator<char>>tokens(param_line, bTok);
 				std::vector<std::string> vals;
-				for (const auto& t : tokens) vals.push_back(t);
+				for (const auto& t : tokens)
+					vals.push_back(t);
 				float val = boost::lexical_cast<float>(vals[1]);
-				//cout << vals[0] <<": "<< vals[1] << endl;
+				//std::cout << vals[0] <<": "<< vals[1] << std::endl;
 				params.push_back(val);
 			}
 
@@ -163,14 +176,15 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 		printf("%s doesn't exist!! (5)\n", paramsFile.c_str());
 	}
 }
-std::vector<std::string> ReadFilesInPath(path p) {
+
+std::vector<std::string> ReadFilesInPath(boost::filesystem::path p) {
 
 	std::vector<std::string> pathVec;
 
-	directory_iterator end_itr;
+	std::filesystem::directory_iterator end_itr;
 
 	// cycle through the directory
-	for (directory_iterator itr(p); itr != end_itr; ++itr)
+	for (std::filesystem::directory_iterator itr(p); itr != end_itr; ++itr)
 	{
 		// If it's not a directory, list it. If you want to list directories too, just remove this check.
 		if (is_regular_file(itr->path())) {
@@ -181,15 +195,16 @@ std::vector<std::string> ReadFilesInPath(path p) {
 	}
 	return pathVec;
 }
+
 VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, const std::string& detTxt, VECx2xBBDet& carDets, VECx2xBBDet& personDets) {
 
 	VECx2xBBDet detsSeq_out;
 
 	if (boost::filesystem::exists(detTxt)) {
-		cout << "[ERROR] Detection file does not exist!\n" << endl;
+		std::cout << "[ERROR] Detection file does not exist!\n" << std::endl;
 	}
 	else { // if (_access(detTxt.c_str(),0)==0) {
-			//cout << "[WORK] Detection file path have been loaded." << endl;
+			//std::cout << "[WORK] Detection file path have been loaded." << std::endl;
 
 		std::vector<std::string> detLines;
 
@@ -199,7 +214,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 		while (!infile.eof()) {
 			getline(infile, line);
 			detLines.push_back(line);
-			//cout << line << endl;
+			//std::cout << line << std::endl;
 		}
 		detLines = SortAllDetections(detLines, DB_TYPE);
 
@@ -220,8 +235,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 			boost::tokenizer < boost::char_separator<char>>tokens(detSTR, bTok);
 
 			std::vector<std::string> vals;
-			for (const auto& t : tokens)
-			{
+			for (const auto& t : tokens) {
 				vals.push_back(t);
 			}
 			if (vals.empty()) {
@@ -262,8 +276,10 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 
 				char objType = boost::lexical_cast<char>(vals.at(6));
 				int objTypeINT = 0.0;
-				if (objType == '1')			objTypeINT = sym::OBJECT_TYPE::CAR;
-				else if (objType == '2')	objTypeINT = sym::OBJECT_TYPE::PEDESTRIAN;
+				if (objType == '1')
+					objTypeINT = sym::OBJECT_TYPE::CAR;
+				else if (objType == '2')
+					objTypeINT = sym::OBJECT_TYPE::PEDESTRIAN;
 
 				// Detection -> BBDet 
 				det.object_type = objTypeINT;
@@ -308,10 +324,9 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 
 			if (iFrmCnt == curFrm) {
 				detFrmCnt++;
-			}
-			else if (iFrmCnt < curFrm) {		// Next frame
-				cerr << "\r";
-				cerr << "(" << iFrmCnt + sym::FRAME_OFFSETS[DB_TYPE] << ")";
+			} else if (iFrmCnt < curFrm) {		// Next frame
+				std::cerr << "\r";
+				std::cerr << "(" << iFrmCnt + sym::FRAME_OFFSETS[DB_TYPE] << ")";
 				do {
 					detFrmCnt = 0;
 
@@ -340,12 +355,11 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 			}
 			else {
 				// MISC or DONTCARE
-
 			}
 		}
 		// End Frame
-		cerr << "\r";
-		cerr << "(" << iFrmCnt + 1 << ")";
+		std::cerr << "\r";
+		std::cerr << "(" << iFrmCnt + 1 << ")";
 
 		detsSeq_out.push_back(detsFrmAll);
 		carDets.push_back(detsFrmCar);
@@ -354,14 +368,15 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 
 	return detsSeq_out;
 }
+
 VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const std::string& trkTxt, VECx2xBBTrk& carTrks, VECx2xBBTrk& personTrks, cv::Mat& carHeatMap, cv::Mat& perHeatMap) {
 	VECx2xBBTrk trksSeq_out;
 
 	if (boost::filesystem::exists(trkTxt)) {
-		cout << "[ERROR] Tracking file does not exist!\n" << endl;
+		std::cout << "[ERROR] Tracking file does not exist!\n" << std::endl;
 	}
 	else { // if (_access(trkTxt.c_str(),0)==0) {
-			//cout << "[WORK] Trkection file path have been loaded." << endl;
+			//std::cout << "[WORK] Trkection file path have been loaded." << std::endl;
 
 		std::vector<std::string> trkLines;
 
@@ -371,7 +386,7 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const 
 		while (!infile.eof()) {
 			getline(infile, line);
 			trkLines.push_back(line);
-			//cout << line << endl;
+			//std::cout << line << std::endl;
 		}
 		//trkLines = SortAllTrkections(trkLines, DB_TYPE);
 
@@ -481,8 +496,8 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const 
 				trkFrmCnt++;
 			}
 			else if (iFrmCnt < curFrm) {		// Next frame
-				cerr << "\r";
-				cerr << "(" << iFrmCnt + sym::FRAME_OFFSETS[DB_TYPE] << ")";
+				std::cerr << "\r";
+				std::cerr << "(" << iFrmCnt + sym::FRAME_OFFSETS[DB_TYPE] << ")";
 				do {
 					trkFrmCnt = 0;
 
@@ -534,8 +549,8 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const 
 			}
 		}
 		// End Frame
-		cerr << "\r";
-		cerr << "(" << iFrmCnt + sym::FRAME_OFFSETS[DB_TYPE] << ")";
+		std::cerr << "\r";
+		std::cerr << "(" << iFrmCnt + sym::FRAME_OFFSETS[DB_TYPE] << ")";
 
 		trksSeq_out.push_back(trksFrmAll);
 		//carTrks.push_back(trksFrmCar);
@@ -544,6 +559,7 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const 
 
 	return trksSeq_out;
 }
+
 std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLines, int DB_TYPE) {
 	// ascending sort by frame number
 	/// http://azza.tistory.com/entry/STL-std::vector-%EC%9D%98-%EC%A0%95%EB%A0%AC
@@ -583,7 +599,7 @@ std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLi
 	std::vector<T> tempAllLines;
 	std::vector<std::string>::const_iterator iter = allLines.begin();
 	for (; iter != allLines.end(); iter++) {
-		if (iter[0].size() < 2) continue;
+		if (iter[0].t_size() < 2) continue;
 
 		tempAllLines.push_back(T(iter[0], DB_TYPE));
 	}
@@ -600,6 +616,7 @@ std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLi
 
 	return sortedAllLines;
 }
+
 void SaveResultImgs(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqNAME, const int& iFrmCnt, const cv::Mat& img, const float& ths_det, const std::string& tag) {
 	
 	std::std::string strThDetConf;
@@ -631,20 +648,21 @@ void SaveResultImgs(const int& DB_TYPE, const std::string& MODE, const std::stri
 		//sprintf(filePathINTP, "res/MOTSChallenge/%s/%s/%s_intp/_speed.txt", MODE, detNAME, strThDetConf);
 	}
 
-	//cout << folderPath << endl;
+	//std::cout << folderPath << std::endl;
 	if (!boost::filesystem::exists(folderPath)) {
 		boost::filesystem::create_directory(folderPath);
 	}
 	sprintf(folderPath, "%s/%s", folderPath, tag.c_str());
 	if (!boost::filesystem::exists(folderPath)) {
 		boost::filesystem::create_directory(folderPath);
-		cout << folderPath << " is created." << endl;
+		std::cout << folderPath << " is created." << std::endl;
 	}
 
 	sprintf(filePath, "%s/%.5d.jpg", folderPath, iFrmCnt);
 
 	cv::imwrite(filePath, img);
 }
+
 // convert
 int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::Size& frm_sz, const float& DET_SCORE_TH) {
 	VECx2xBBDet detsSeq_trunc;
@@ -653,7 +671,7 @@ int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::S
 	for (auto& detFrm : in_dets) {
 		std::vector<BBDet> detsFrm_trunc;
 
-		int nDets = detFrm.size();
+		int nDets = detFrm.t_size();
 		Concurrency::parallel_for(0, nDets, [&](int d) {
 			//	for (auto& det : detFrm) {
 
@@ -691,6 +709,7 @@ int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::S
 
 	return nValidObjs;
 }
+
 // Convert "cv::Mat mask" to "std::std::string Rle Encoded mask"
 std::std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz, const cv::Rect& bbox, const bool& viewDetail) {
 
@@ -730,6 +749,7 @@ std::std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frm
 	if (viewDetail) printf("(6)");
 	return std::string(maskCharPtr);
 }
+
 // Convert  "std::std::string Rle Encoded mask" to "cv::Mat mask"
 void CvtRleSTR2MAT(const std::std::string &in_maskRleSTR, const cv::Size& in_segImgSz, cv::Mat& out_maskMAT, cv::Rect& out_objRec) {
 
@@ -739,14 +759,14 @@ void CvtRleSTR2MAT(const std::std::string &in_maskRleSTR, const cv::Size& in_seg
 	//wstd::string relStr_w;			// unicode
 	//relStr_w.assign(rleStr.begin(), rleStr.end());
 	//std::string rleStrUTF8 = boost::locale::conv::utf_to_utf<char>(rleStr);
-	//cout << rleStr << endl;
-	//cout << rleStrUTF8 << endl;
-	//cout << relStr_w << endl; // "를 인식하네, 어쨌든 안됨
+	//std::cout << rleStr << std::endl;
+	//std::cout << rleStrUTF8 << std::endl;
+	//std::cout << relStr_w << std::endl; // "를 인식하네, 어쨌든 안됨
 
 	RLE rleTemp;
-	siz segImgW = (siz)in_segImgSz.width; siz segImgH = (siz)in_segImgSz.height;
+	t_siz segImgW = (t_siz)in_segImgSz.width; t_siz segImgH = (t_siz)in_segImgSz.height;
 
-	// frame image size = transposistion of segment image size
+	// frame image t_size = transposistion of segment image t_size
 	/// rows (height), cols (width) 
 	cv::Mat matMaskFrm(in_segImgSz.width, in_segImgSz.height, CV_8UC1, cv::Scalar(0));
 
@@ -782,8 +802,9 @@ void CvtRleSTR2MAT(const std::std::string &in_maskRleSTR, const cv::Size& in_seg
 	delete[]s;
 	delete[]mask;
 }
+
 cv::Rect CvtMAT2RECT(const cv::Size& in_segImgSz, const cv::Mat& in_maskMAT) {
-	siz segImgW = (siz)in_segImgSz.width; siz segImgH = (siz)in_segImgSz.height;
+	t_siz segImgW = (t_siz)in_segImgSz.width; t_siz segImgH = (t_siz)in_segImgSz.height;
 
 	int min[2] = { (int)segImgH - 1, (int)segImgW - 1 };
 	int max[2] = { 0 ,0 };

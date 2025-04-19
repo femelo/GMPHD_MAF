@@ -1,7 +1,8 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
-
+#include <vector>
+#include <string>
 #include <opencv2/core.hpp>
 // #include <opencv2/highgui.hpp>
 // #include <opencv2/imgproc.hpp>
