@@ -32,8 +32,13 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <opencv2/core.hpp> // For image processing functions if needed
+#include <opencv2/imgproc.hpp> // For image processing functions if needed
+#include <opencv2/highgui.hpp> // For imshow, waitKey if needed in .cpp
 // GMPHD_MAF.cpp
 #include "GMPHD_MAF.h"
+#include "drawing.hpp"
+
 
 GMPHD_MAF::GMPHD_MAF()
 {
@@ -389,7 +394,6 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 			}
 		}
 	}
-	);
 
 	// Calculate States' Weights by GMPHD filtering with q values
 	// Then the Cost Matrix is filled with States's Weights to solve Assignment Problem.
@@ -434,7 +438,6 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 		}
 		//printf("\n");
 	}
-	);
 
 	// KCF features based Affinity Calculation
 	if (this->params.SAF_D2TA_MODE > sym::AFFINITY_OPT::GMPHD) {
@@ -464,7 +467,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 
 			if (VIS_D2TA_DETAIL) {
 				cv::namedWindow(winTitleDA);	cv::moveWindow(winTitleDA, FW, 0);
-				canvasDA = cv::Mat(cellWH * (mStats)+margin, cellWH * (nObs + 1) + margin, CV_8UC3, cv::Scalar(200, 200, 200));
+				canvasDA = cv::Mat(cellWH * (mStats)+margin, cellWH * (nObs + 1) + margin, CV_8UC(3), cv::Scalar(200, 200, 200));
 			}
 
 			vector<BBDet> kcf_dummy;
@@ -480,7 +483,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 					cv::Rect statRecInFrame = this->RectExceptionHandling(this->frmWidth, this->frmHeight, stats[c].rec);
 
 					if (statRecInFrame.width < 1 || statRecInFrame.height < 1)
-						statResize = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+						statResize = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 					else
 						cv::resize(frameProc(statRecInFrame), statResize, cv::Size(100, 100)); // predicted state
 
@@ -488,7 +491,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 
 					char strIDConf[64];
 					sprintf(strIDConf, "ID%d (%.3f)", id, stats[c].conf);
-					cv::putText(canvasDA, string(strIDConf), cv::Point(margin, margin / 2 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id / 2) % (MAX_OBJECTS - 1)], 2);
+					cv::putText(canvasDA, string(strIDConf), cv::Point(margin, margin / 2 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id / 2) % (MAX_OBJECTS - 1)], 2);
 				}
 
 				if (VIS_D2TA_DETAIL)
@@ -513,7 +516,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 								confProb = 0.99;
 								//cv::rectangle(frameVis, obss[r].rec, cv::Scalar(0, 0, 0), -1);
 								if (VIS_D2TA_DETAIL)
-									confMap = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+									confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 							}
 							else {
 								cv::Rect res = stats_matrix[r][c].papp.update(frameProc, confProb, confMap, obss[r].rec, true, obss[r].segMask, this->params.SAF_MASK_D2TA);
@@ -533,7 +536,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 								if (res.width < 1 || res.height < 1) {
 									//confProb = 0.99;
 									if (VIS_D2TA_DETAIL)
-										confMap = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+										confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 								}
 							}
 						}
@@ -543,7 +546,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 							if (res.width < 1 || res.height < 1) {
 								//confProb = 0.99;
 								if (VIS_D2TA_DETAIL)
-									confMap = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+									confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 							}
 						}
 						cv::Mat obsResize;
@@ -553,7 +556,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 							obsDAcell = cv::Rect(margin + cellWH * (r + 1), margin + cellWH * c, 100, 100);
 
 							if (obsRecInFrame.width < 1 || obsRecInFrame.height < 1)
-								obsResize = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+								obsResize = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 							else
 								cv::resize(frameProc(obsRecInFrame), obsResize, cv::Size(100, 100));
 
@@ -606,16 +609,16 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 						}
 						if (m_cost[c][r] < 10000) {
 							if (VIS_D2TA_DETAIL) {
-								cv::putText(canvasDA, this->to_str(score_gmphd_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
+								cv::putText(canvasDA, this->to_str(score_gmphd_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 							}
 						}
 						else {
 							if (VIS_D2TA_DETAIL)
-								cv::putText(canvasDA, "INF", cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
+								cv::putText(canvasDA, "INF", cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 						}
 						if (VIS_D2TA_DETAIL) {
 							cv::addWeighted(canvasDA(obsDAcell), 0.6, confMapResize, 0.4, 0.0, canvasDA(obsDAcell));
-							cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
+							cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
 						}
 
 						if (!confMap.empty())		confMap.release();
@@ -625,7 +628,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 				}
 				frameProc.release();
 			}
-			);
+
 			// Fusing GMPHD and KCF scores
 			float CONF_LOWER_THRESH = this->params.KCF_BOUNDS_D2TA[0];
 			float CONF_UPPER_THRESH = this->params.KCF_BOUNDS_D2TA[1];
@@ -941,16 +944,16 @@ float GMPHD_MAF::FrameWiseAffinity(BBDet ob, BBTrk &stat_temp, const int MODEL_T
 	// Step 2: Update phase1
 	double q_value = 0.0;
 
-	cv::Mat K(dims_stat, dims_obs, CV_64FC1);
+	cv::Mat K(dims_stat, dims_obs, CV_64FC(1));
 
-	cv::Mat z_cov_dbl(dims_obs, dims_obs, CV_64FC1);
-	cv::Mat z_cov_flt(dims_obs, dims_obs, CV_32FC1);
+	cv::Mat z_cov_dbl(dims_obs, dims_obs, CV_64FC(1));
+	cv::Mat z_cov_flt(dims_obs, dims_obs, CV_32FC(1));
 
-	cv::Mat Ps_temp(dims_stat, dims_stat, CV_64FC1);
+	cv::Mat Ps_temp(dims_stat, dims_stat, CV_64FC(1));
 
-	cv::Mat z_temp(dims_obs, 1, CV_32FC1);
+	cv::Mat z_temp(dims_obs, 1, CV_32FC(1));
 
-	cv::Mat mean_obs(dims_obs, 1, CV_32FC1);
+	cv::Mat mean_obs(dims_obs, 1, CV_32FC(1));
 
 	// (20) Make the Mean Vector (cv::Mat) from the state (BBTrk)
 	// (23) z_cov_temp = H*Ps*H.t() + R;
@@ -970,7 +973,7 @@ float GMPHD_MAF::FrameWiseAffinity(BBDet ob, BBTrk &stat_temp, const int MODEL_T
 	// Update the Covariance Matrix
 	Ps_temp.copyTo(stat_temp.cov);
 
-	// CV_64FC1 to CV_32FC1
+	// CV_64FC(1) to CV_32FC(1)
 	for (int r = 0; r < z_cov_flt.rows; r++)
 		for (int c = 0; c < z_cov_flt.cols; c++)
 			z_cov_flt.at<float>(r, c) = z_cov_dbl.at<double>(r, c);
@@ -1003,15 +1006,15 @@ float GMPHD_MAF::TrackletWiseAffinity(BBTrk &stat_pred, const BBTrk& obs, const 
 	// Step 2: Update phase1
 	double q_value = 0.0;
 
-	cv::Mat K(dims_stat, dims_obs, CV_64FC1);
+	cv::Mat K(dims_stat, dims_obs, CV_64FC(1));
 
-	cv::Mat mean_obs(dims_obs, 1, CV_32FC1);
+	cv::Mat mean_obs(dims_obs, 1, CV_32FC(1));
 
-	cv::Mat z_cov_dbl(dims_obs, dims_obs, CV_64FC1);
-	cv::Mat z_cov_flt(dims_obs, dims_obs, CV_32FC1);
-	cv::Mat Ps_temp(dims_stat, dims_stat, CV_64FC1);
+	cv::Mat z_cov_dbl(dims_obs, dims_obs, CV_64FC(1));
+	cv::Mat z_cov_flt(dims_obs, dims_obs, CV_32FC(1));
+	cv::Mat Ps_temp(dims_stat, dims_stat, CV_64FC(1));
 
-	cv::Mat z_temp(dims_obs, 1, CV_32FC1);
+	cv::Mat z_temp(dims_obs, 1, CV_32FC(1));
 
 	// (20) Make the Mean Vector (cv::Mat) from the state (BBTrk)
 	// (23) z_cov_temp = H*Ps*H.t() + R;
@@ -1031,7 +1034,7 @@ float GMPHD_MAF::TrackletWiseAffinity(BBTrk &stat_pred, const BBTrk& obs, const 
 	// Update the Covariance Matrix
 	Ps_temp.copyTo(stat_pred.cov);
 
-	// CV_64FC1 to CV_32FC1
+	// CV_64FC(1) to CV_32FC(1)
 	for (int r = 0; r < z_cov_flt.rows; r++)
 		for (int c = 0; c < z_cov_flt.cols; c++)
 			z_cov_flt.at<float>(r, c) = z_cov_dbl.at<double>(r, c);
@@ -1063,9 +1066,9 @@ float GMPHD_MAF::TrackletWiseAffinityKF(BBTrk &stat_pred, const BBTrk& obs, cons
 	// Step 2: Update phase1
 	double q_value = 0.0;
 
-	cv::Mat mean_obs(dims_obs, 1, CV_32FC1);
-	cv::Mat z_cov_flt(dims_obs, dims_obs, CV_32FC1);
-	cv::Mat z_temp(dims_obs, 1, CV_32FC1);
+	cv::Mat mean_obs(dims_obs, 1, CV_32FC(1));
+	cv::Mat z_cov_flt(dims_obs, dims_obs, CV_32FC(1));
+	cv::Mat z_temp(dims_obs, 1, CV_32FC(1));
 
 	if (MODEL_TYPE == sym::MODEL_VECTOR::XY ) {
 		mean_obs.at<float>(0, 0) = (float)stat_pred.rec.x + (float)stat_pred.rec.width / 2.0;
@@ -1074,7 +1077,7 @@ float GMPHD_MAF::TrackletWiseAffinityKF(BBTrk &stat_pred, const BBTrk& obs, cons
 		z_temp = (cv::Mat_<float>(dims_obs, 1) << obs.rec.x + (float)obs.rec.width / 2.0, obs.rec.y + (float)obs.rec.height / 2.0);
 	}
 
-	// CV_64FC1 4x4 to CV_32FC1 2x2
+	// CV_64FC(1) 4x4 to CV_32FC(1) 2x2
 	for (int r = 0; r < z_cov_flt.rows; r++)
 		for (int c = 0; c < z_cov_flt.cols; c++)
 			z_cov_flt.at<float>(r, c) = stat_pred.cov.at<double>(r, c);
@@ -1636,7 +1639,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 
 			if (VIS_T2TA_DETAIL) {
 				cv::namedWindow(winTitleT2TA);	cv::moveWindow(winTitleT2TA, this->frmWidth, 0);
-				canvasDA = cv::Mat(cellWH * (mStats)+margin, cellWH * (nObs + 1) + margin, CV_8UC3, cv::Scalar(200, 200, 200));
+				canvasDA = cv::Mat(cellWH * (mStats)+margin, cellWH * (nObs + 1) + margin, CV_8UC(3), cv::Scalar(200, 200, 200));
 
 				//this->cvPrintVec2Vec(fd_ex, "Frame Diffs");
 			}
@@ -1654,7 +1657,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 						stats_lost[c].tmpl.empty(), stats_lost[c].tmpl.rows, stats_lost[c].tmpl.cols,
 						stats_lost[c].rec.x, stats_lost[c].rec.y, stats_lost[c].rec.width, stats_lost[c].rec.height);*/
 					if (stats_lost[c].tmpl.empty())
-						statResize = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0.0, 0));
+						statResize = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0.0, 0));
 					else
 						cv::resize(stats_lost[c].tmpl, statResize, cv::Size(100, 100)); // predicted state
 
@@ -1662,8 +1665,8 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 
 					char strIDConf[64];
 					sprintf(strIDConf, "ID%d (%.3f)", id_lost, stats_lost[c].conf);
-					cv::putText(canvasDA, string(strIDConf), cv::Point(margin, margin / 2 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id_lost / 2) % (MAX_OBJECTS - 1)], 2);
-					cv::putText(canvasDA, "~" + std::to_string(stats_lost[c].fn), cv::Point(margin, margin / 2 + cellWH * (c + 1) - 105), CV_FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id_lost / 2) % (MAX_OBJECTS - 1)], 2);
+					cv::putText(canvasDA, string(strIDConf), cv::Point(margin, margin / 2 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id_lost / 2) % (MAX_OBJECTS - 1)], 2);
+					cv::putText(canvasDA, "~" + std::to_string(stats_lost[c].fn), cv::Point(margin, margin / 2 + cellWH * (c + 1) - 105), cv::FONT_HERSHEY_COMPLEX, 0.5, this->color_tab[(id_lost / 2) % (MAX_OBJECTS - 1)], 2);
 				}
 
 
@@ -1692,7 +1695,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 									confProb = 0.99;
 									//cv::rectangle(frameVis, obss[r].rec, cv::Scalar(0, 0, 0), -1);
 									if (VIS_T2TA_DETAIL)
-										confMap = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+										confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 								}
 								else {
 									cv::Rect res = stats_matrix[r][c].papp.update(frameProc, confProb, confMap, obss_live[r].rec, true, obss_live[r].segMask, this->params.SAF_MASK_T2TA);
@@ -1702,7 +1705,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 									if (res.width < 1 || res.height < 1) {
 										//confProb = 0.99;
 										if (VIS_T2TA_DETAIL)
-											confMap = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+											confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 									}
 								}
 							}
@@ -1712,7 +1715,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 								if (res.width < 1 || res.height < 1) {
 									//confProb = 0.99;
 									if (VIS_T2TA_DETAIL)
-										confMap = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+										confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 								}
 							}
 							cv::Mat obsResize;
@@ -1722,7 +1725,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 								obsDAcell = cv::Rect(margin + cellWH * (r + 1), margin + cellWH * c, 100, 100);
 
 								if (obsRecInFrame.width < 1 || obsRecInFrame.height < 1)
-									obsResize = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+									obsResize = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 								else
 									cv::resize(frameProc(obsRecInFrame), obsResize, cv::Size(100, 100));
 
@@ -1776,19 +1779,19 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 								printf("IOU(%.2f), Cost:%s(GMPHD:%s, KCF:%.5f)\n", iou, this->to_str(m_cost[c][r]), this->to_str(score_gmphd_temp).c_str(), score_kcf_temp);
 
 								if (m_cost[c][r] < 10000) {
-									cv::putText(canvasDA, this->to_str(score_gmphd_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
+									cv::putText(canvasDA, this->to_str(score_gmphd_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 								}
 								else {
 									char strINF_IOU[64];
 									sprintf(strINF_IOU, "INF (IOU:%.3f)", IOUs2D[r][c]);
-									cv::putText(canvasDA, strINF_IOU, cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
+									cv::putText(canvasDA, strINF_IOU, cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 								}
 								cv::addWeighted(canvasDA(obsDAcell), 0.6, confMapResize, 0.4, 0.0, canvasDA(obsDAcell));
-								cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
+								cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
 
 								char strIDConf[64];
 								sprintf(strIDConf, "ID%d(%.3f)", id_live, obss_live[r].conf);
-								cv::putText(canvasDA, string(strIDConf), cv::Point(margin + cellWH * (r + 1), margin - 45 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+								cv::putText(canvasDA, string(strIDConf), cv::Point(margin + cellWH * (r + 1), margin - 45 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
 
 								confMap.release();
 								confMapResize.release();
@@ -1809,11 +1812,11 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 								int id_live = obss_live[r].id;
 								double score_kcf_temp = 0.0;
 								cv::Rect obsRecInFrame = this->RectExceptionHandling(this->frmWidth, this->frmHeight, obss_live[r].rec);
-								cv::Mat confMap = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+								cv::Mat confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 								obsDAcell = cv::Rect(margin + cellWH * (r + 1), margin + cellWH * c, 100, 100);
 
 								if (obsRecInFrame.width < 1 || obsRecInFrame.height < 1)
-									obsResize = cv::Mat(100, 100, CV_8UC3, cv::Scalar(0, 0, 0));
+									obsResize = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 								else
 									cv::resize(frameProc(obsRecInFrame), obsResize, cv::Size(100, 100));
 
@@ -1822,18 +1825,18 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 
 								char strINF_IOU[64];
 								sprintf(strINF_IOU, "INF (IOU:%.3f)", IOUs2D[r][c]);
-								cv::putText(canvasDA, strINF_IOU, cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
+								cv::putText(canvasDA, strINF_IOU, cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 
 								cv::addWeighted(canvasDA(obsDAcell), 0.6, confMapResize, 0.4, 0.0, canvasDA(obsDAcell));
-								cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
+								cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
 
 								char strIDConf[64];
 								sprintf(strIDConf, "ID%d(%.3f)", id_live, obss_live[r].conf);
-								cv::putText(canvasDA, string(strIDConf), cv::Point(margin + cellWH * (r + 1), margin - 45 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+								cv::putText(canvasDA, string(strIDConf), cv::Point(margin + cellWH * (r + 1), margin - 45 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
 
 								// Excluded in T2TA because of the last frame of the lost track > the first frame of the live track
-								cv::putText(canvasDA, std::to_string(stats_lost[c].fn + fd_ex[r][c]) + "~", cv::Point(margin + cellWH * (r + 1), margin - 90 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 2);
-								cv::putText(canvasDA, "Excluded", cv::Point(margin + cellWH * (r + 1), margin - 110 + cellWH * (c + 1)), CV_FONT_HERSHEY_COMPLEX, 0.6, cv::Scalar(255, 255, 255), 2);
+								cv::putText(canvasDA, std::to_string(stats_lost[c].fn + fd_ex[r][c]) + "~", cv::Point(margin + cellWH * (r + 1), margin - 90 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 2);
+								cv::putText(canvasDA, "Excluded", cv::Point(margin + cellWH * (r + 1), margin - 110 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.6, cv::Scalar(255, 255, 255), 2);
 
 								confMap.release();
 								confMapResize.release();
@@ -2194,7 +2197,7 @@ void GMPHD_MAF::InitializeMatrices(cv::Mat &F, cv::Mat &Q, cv::Mat &Ps, cv::Mat 
 		��t = �����ÿ��� ��frame���� �� 1�̴�.
 		*/
 
-		F = cv::Mat::eye(dims_state, dims_state, CV_64FC1); // identity matrix
+		F = cv::Mat::eye(dims_state, dims_state, CV_64FC(1)); // identity matrix
 		F.at<double>(0, 2) = 1.0;///30.0; // 30fps�� ����, ���߿� ����Ҷ� St = St-1 + Vt-1��t (S : location) ���� 
 		F.at<double>(1, 3) = 1.0;///30.0; // Vt-1��t ���� 1/30 �� �������. Vt-1 (1frame�� �̵��ȼ� / 0.0333..), ��t = 0.0333...
 
@@ -2282,8 +2285,8 @@ vector<BBDet> GMPHD_MAF::MergeDetInstances(vector<BBDet>& obss, const bool& IS_M
 				if (VIS_MERGE_ON) {
 					merge_check = true;
 
-					cv::Mat mu3c; // (h, w, CV_8UC3);
-					cv::cvtColor(mu, mu3c, CV_GRAY2BGR/*, CV_8UC3*/);
+					cv::Mat mu3c; // (h, w, CV_8UC(3));
+					cv::cvtColor(mu, mu3c, cv::COLOR_GRAY2BGR/*, CV_8UC(3)*/);
 
 					cv::Vec3b overlap_color = { 255, 0, 0 };			// blue
 					if (m_value >= sOCC_TH && m_value < sMERGE_TH)	overlap_color = { 0, 255, 0 }; // green
@@ -2422,8 +2425,8 @@ vector<BBTrk> GMPHD_MAF::MergeTrkInstances(vector<BBTrk>& stats, const float& sO
 	//	//	cv::rectangle(frameMerge, track.rec, cv::Scalar(255, 255, 255), 3);
 	//	//	cv::Scalar id_color = color_tab[track.id % (MAX_OBJECTS - 1)];
 	//	//	this->DrawTrkBBS(frameMerge, track.rec, id_color, 2, track.id, 0.5, "CAR");
-	//	//	//cv::Mat seg3c; // (h, w, CV_8UC3);
-	//	//	//cv::cvtColor(track.segMask, seg3c, CV_GRAY2BGR/*, CV_8UC3*/);
+	//	//	//cv::Mat seg3c; // (h, w, CV_8UC(3));
+	//	//	//cv::cvtColor(track.segMask, seg3c, cv::COLOR_GRAY2BGR/*, CV_8UC(3)*/);
 	//	//	//seg3c.setTo(id_color, seg3c);
 	//	//	//addWeighted(frame(track.rec), 0.5, seg3c, 0.5, 0.0, frame(track.rec));
 	//	//}
@@ -2472,8 +2475,8 @@ vector<BBTrk> GMPHD_MAF::MergeTrkInstances(vector<BBTrk>& stats, const float& sO
 						if (VIS_MERGE_ON) {
 							merge_check = true;
 
-							cv::Mat mu3c; // (h, w, CV_8UC3);
-							cv::cvtColor(mu, mu3c, CV_GRAY2BGR/*, CV_8UC3*/);
+							cv::Mat mu3c; // (h, w, CV_8UC(3));
+							cv::cvtColor(mu, mu3c, cv::COLOR_GRAY2BGR/*, CV_8UC(3)*/);
 
 							cv::Vec3b overlap_color = { 255, 0, 0 };			// blue
 							if (m_value >= sOCC_TH && m_value < sMERGE_TH)	overlap_color = { 0, 255, 0 }; // green
@@ -2633,7 +2636,7 @@ void GMPHD_MAF::MergeSegMasksRects(const vector<cv::Mat>& in_masks, const vector
 	int w = max[0] - min[0];
 	int h = max[1] - min[1];
 
-	cv::Mat Mu(h, w, CV_8UC1, cv::Scalar(0));
+	cv::Mat Mu(h, w, CV_8UC(1), cv::Scalar(0));
 
 	int i = 0;
 	float nR = 1.0 / (float)in_rects.size();
@@ -2662,7 +2665,7 @@ void GMPHD_MAF::MergeSegMasksRects(const vector<cv::Mat>& in_masks, const vector
 		i++;
 	}
 
-	// 0, 127-in_rects.size() �� �������� �ɼ��� ���� �� �ְڴ�. -in_rects.size() �� CV_8UC �� �Ҽ��� ����� �����ԵǴ� ���� ����
+	// 0, 127-in_rects.size() �� �������� �ɼ��� ���� �� �ְڴ�. -in_rects.size() �� cv::CV_8UC �� �Ҽ��� ����� �����ԵǴ� ���� ����
 	double th = 255.0 * nR - in_rects.size();
 	cv::threshold(Mu, Mu, th, 255, cv::THRESH_BINARY);
 	if (!out_mask.empty()) out_mask.release();

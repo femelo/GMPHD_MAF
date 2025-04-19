@@ -37,7 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/geometry.hpp>
 
 // BOOST_GEOMETRY_REGISTER_C_ARRAY_CS(cs::cartesian)
-typedef boost::geometry::model::polygon<boost::geometry::model::d2::point_xy<float> > Polygon2D;
+typedef bootst::geometry::model::d2::point_xy<float> Point2D;
+typedef boost::geometry::model::range<Point2D> Range2D;
+typedef boost::geometry::model::polygon<Point2D> Polygon2D;
 
 OnlineTracker::OnlineTracker() {}
 
@@ -80,7 +82,7 @@ int OnlineTracker::GetObjType() {
 std::vector<std::vector<int>> OnlineTracker::HungarianMethod(std::vector<std::vector<double>>& costMatrix, const int& nObs, const int& nStats) {
 
 	std::vector<std::vector<int>> assigns;
-	assigns.resize(nObs, std::std::vector<int>(nStats, 0));
+	assigns.resize(nObs, std::vector<int>(nStats, 0));
 
 	std::vector<int> assignment;
 	this->HungAlgo.iFrmCnt = this->sysFrmCnt;
@@ -144,9 +146,9 @@ std::vector<std::vector<cv::Vec2i>> OnlineTracker::cvtSparseMatrix2Dense(const s
 	// index: source indices (sparse matrix: m2)
 	// value: translated indices (dense matrix: m1)
 	std::vector<std::vector<cv::Vec2i>> trans_idx_matrix; // m2 to m1
-	trans_idx_matrix.resize(trans_row.size(), std::std::vector<cv::Vec2i>(trans_col.size()));
+	trans_idx_matrix.resize(trans_row.size(), std::vector<cv::Vec2i>(trans_col.size()));
 
-	denseMatrix.resize(trans_row.size(), std::std::vector<double>(trans_col.size()));
+	denseMatrix.resize(trans_row.size(), std::vector<double>(trans_col.size()));
 
 	si = 0;
 	for (auto& row : trans_idx_matrix) {
@@ -209,10 +211,10 @@ void OnlineTracker::UpdateImageQueue(const cv::Mat img, int Q_SIZE) {
 
 // Initialized the STL Containters for Online Tracker
 void OnlineTracker::InitializeTrackletsContainters() {
-	this->detsBatch = new std::std::vector<BBDet>[this->params.TRACK_MIN_SIZE];
-	this->liveTracksBatch = new std::std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
-	this->lostTracksBatch = new std::std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
-	this->groupsBatch = new std::unordered_map<int, std::std::vector<RectID>>[this->params.GROUP_QUEUE_SIZE];
+	this->detsBatch = new std::vector<BBDet>[this->params.TRACK_MIN_SIZE];
+	this->liveTracksBatch = new std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
+	this->lostTracksBatch = new std::vector<BBTrk>[this->params.TRACK_MIN_SIZE];
+	this->groupsBatch = new std::unordered_map<int, std::vector<RectID>>[this->params.GROUP_QUEUE_SIZE];
 }
 
 cv::Point2f OnlineTracker::CalcSegMaskCenter(const cv::Rect& rec, const cv::Mat& mask) {
@@ -302,18 +304,28 @@ float OnlineTracker::CalcIOU(const cv::Rect& Ra, const cv::Rect& Rb) {
 */
 float OnlineTracker::Calc3DIOU(std::vector<cv::Vec3f> Ca, cv::Vec3f Da, std::vector<cv::Vec3f> Cb, cv::Vec3f Db) {
 
-	float pointsA[5][2] = { {Ca[0][0],Ca[0][2]},{ Ca[1][0],Ca[1][2] },{ Ca[2][0],Ca[2][2] },{ Ca[3][0],Ca[3][2] },{ Ca[0][0],Ca[0][2] } };
+	Range2D pointsA;
+	pointsA.push_back(Point2D({Ca[0][0],Ca[0][2]}));
+	pointsA.push_back(Point2D({Ca[1][0],Ca[1][2]}));
+	pointsA.push_back(Point2D({Ca[2][0],Ca[2][2]}));
+	pointsA.push_back(Point2D({Ca[3][0],Ca[3][2]}));
+	pointsA.push_back(Point2D({Ca[0][0],Ca[0][2]}));
 	Polygon2D polyA;
 	boost::geometry::append(polyA, pointsA);
 
-	float pointsB[5][2] = { { Cb[0][0],Cb[0][2] },{ Cb[1][0],Cb[1][2] },{ Cb[2][0],Cb[2][2] },{ Cb[3][0],Cb[3][2] },{ Cb[0][0],Cb[0][2] } };
+	Range2D pointsB;
+	pointsB.push_back(Point2D({Cb[0][0],Cb[0][2]}));
+	pointsB.push_back(Point2D({Cb[1][0],Cb[1][2]}));
+	pointsB.push_back(Point2D({Cb[2][0],Cb[2][2]}));
+	pointsB.push_back(Point2D({Cb[3][0],Cb[3][2]}));
+	pointsB.push_back(Point2D({Cb[0][0],Cb[0][2]}));
 	Polygon2D polyB;
 	boost::geometry::append(polyB, pointsB);
 
-	std::std::vector<Polygon2D> in;
+	std::vector<Polygon2D> in;
 	boost::geometry::intersection(polyA, polyB, in);
 
-	//std::std::vector<Polygon2D> un;
+	//std::vector<Polygon2D> un;
 	// boost::geometry::union_(gp, dp, un);
 	//double union_area = boost::geometry::area(un.front());
 
@@ -421,8 +433,8 @@ void OnlineTracker::DrawTrkBBS(cv::Mat& img, cv::Rect rec, cv::Scalar color, int
 
 	if ((int)id >= 0) {
 		std::string strID;
-		if (type.empty())	strID = to_std::string(id);
-		else				strID = type.substr(0, 2) + ":" + to_std::string(id);
+		if (type.empty())	strID = std::to_string(id);
+		else				strID = type.substr(0, 2) + ":" + std::to_string(id);
 
 		int idNChars = 0;
 		if (id == 0)	idNChars = 0;
@@ -669,10 +681,10 @@ cv::Mat OnlineTracker::cvPerspectiveTrans2Rect(const cv::Mat img, const std::vec
 
 	// 0->1
 	// 2->3
-	int widthA = std::sqrtf((srcPts[0].x - srcPts[1].x)*(srcPts[0].x - srcPts[1].x) + (srcPts[0].y - srcPts[1].y)*(srcPts[0].y - srcPts[1].y));
-	int heightA = std::sqrtf((srcPts[0].x - srcPts[2].x)*(srcPts[0].x - srcPts[2].x) + (srcPts[0].y - srcPts[2].y)*(srcPts[0].y - srcPts[2].y));
-	int widthB = std::sqrtf((srcPts[2].x - srcPts[3].x)*(srcPts[2].x - srcPts[3].x) + (srcPts[2].y - srcPts[3].y)*(srcPts[2].y - srcPts[3].y));
-	int heightB = std::sqrtf((srcPts[1].x - srcPts[3].x)*(srcPts[1].x - srcPts[3].x) + (srcPts[1].y - srcPts[3].y)*(srcPts[1].y - srcPts[3].y));
+	int widthA = std::sqrt((srcPts[0].x - srcPts[1].x)*(srcPts[0].x - srcPts[1].x) + (srcPts[0].y - srcPts[1].y)*(srcPts[0].y - srcPts[1].y));
+	int heightA = std::sqrt((srcPts[0].x - srcPts[2].x)*(srcPts[0].x - srcPts[2].x) + (srcPts[0].y - srcPts[2].y)*(srcPts[0].y - srcPts[2].y));
+	int widthB = std::sqrt((srcPts[2].x - srcPts[3].x)*(srcPts[2].x - srcPts[3].x) + (srcPts[2].y - srcPts[3].y)*(srcPts[2].y - srcPts[3].y));
+	int heightB = std::sqrt((srcPts[1].x - srcPts[3].x)*(srcPts[1].x - srcPts[3].x) + (srcPts[1].y - srcPts[3].y)*(srcPts[1].y - srcPts[3].y));
 
 	/*int maxWidth = (widthA > widthB) ? widthA : widthB;
 	int maxHeight = (heightA > heightB) ? heightA : heightB;*/
@@ -1018,7 +1030,7 @@ bool OnlineTracker::CopyCovMatDiag(const cv::Mat src, cv::Mat& dst) {
 
 void OnlineTracker::NormalizeWeight(std::vector<BBDet>& detVec) {
 	// Weight normalization
-	std::std::vector<BBDet>::iterator iterD;
+	std::vector<BBDet>::iterator iterD;
 	float sumConfs = 0.0;
 	for (iterD = detVec.begin(); iterD != detVec.end(); ++iterD)
 	{
@@ -1041,7 +1053,7 @@ void OnlineTracker::NormalizeWeight(std::vector<std::vector<BBDet>>& detVecs) {
 	float sumConfs = 0.0;
 
 	for (auto& detVec : detVecs) {
-		std::std::vector<BBDet>::iterator iterD;
+		std::vector<BBDet>::iterator iterD;
 
 		for (iterD = detVec.begin(); iterD != detVec.end(); ++iterD)
 		{
@@ -1049,7 +1061,7 @@ void OnlineTracker::NormalizeWeight(std::vector<std::vector<BBDet>>& detVecs) {
 		}
 	}
 	for (auto& detVec : detVecs) {
-		std::std::vector<BBDet>::iterator iterD;
+		std::vector<BBDet>::iterator iterD;
 		if (sumConfs > 0.0) {
 			for (iterD = detVec.begin(); iterD != detVec.end(); iterD++) {
 				iterD->weight = iterD->confidence / sumConfs;
