@@ -43,9 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem.hpp>
 // #include <boost/format.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
-
-// #include <io.h>
 
 #include "params.hpp"
 #include "mask_api.h"

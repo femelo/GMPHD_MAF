@@ -83,6 +83,7 @@ the use of this software, even if advised of the possibility of such damage.
 #define _OPENCV_KCFTRACKER_HPP_
 
 #include "VOT.h"
+#include <opencv2/core.hpp>
 
 
 class KCFTracker : public VOT

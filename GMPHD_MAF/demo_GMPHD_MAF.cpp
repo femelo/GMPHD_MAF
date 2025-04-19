@@ -36,22 +36,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEMO_GMPHD_MAF_CPP
 
 #include <iostream>
+#include <vector>
+#include <string>
+#include <boost/shared_ptr.hpp>
 #include <opencv2/opencv.hpp>
+
+#include "GMPHD_MAF.h"
+#include "drawing.hpp"
+#include "params.hpp"
 #include "io_mots.hpp"
 
 
 // Funtions for Demo (visualization) in train or test dataset 
-void RunMOTDataset(const vector<string>& seqNAMEs, const vector<string>& seqPATHs, const vector<string>& detTXTs, const vector<MOTparams>& params_in=vector<MOTparams>());
-void RunMOTSequence(const int& sq, const string& seqName, const string& seqPath, const string& detTxt,
-	cv::Vec2i& procObjs, int &procFrames, float &procSecs, const vector<MOTparams>& params_in=vector<MOTparams>());
+void RunMOTDataset(const std::vector<std::string>& seqNAMEs, const std::vector<std::string>& seqPATHs, const std::vector<std::string>& detTXTs, const std::vector<MOTparams>& params_in=std::vector<MOTparams>());
+void RunMOTSequence(const int& sq, const std::string& seqName, const std::string& seqPath, const std::string& detTxt,
+	cv::Vec2i& procObjs, int &procFrames, float &procSecs, const std::vector<MOTparams>& params_in=std::vector<MOTparams>());
 
-void WriteMOTResults(const string& train_or_test, const vector<string>& imgPaths, const string& seqName, const int& seqNum, const string& detName,
+void WriteMOTResults(const std::string& train_or_test, const std::vector<std::string>& imgPaths, const std::string& seqName, const int& seqNum, const std::string& detName,
 	boost::shared_ptr<OnlineTracker> tracker);
-void WriteMOTResults(const string& train_or_test, const vector<string>& imgPaths, const string& seqName, const int& seqNum, const string& detName,
+void WriteMOTResults(const std::string& train_or_test, const std::vector<std::string>& imgPaths, const std::string& seqName, const int& seqNum, const std::string& detName,
 	boost::shared_ptr<OnlineTracker> carTracker, boost::shared_ptr<OnlineTracker> personTracker);
-void WriteFPSTxt(const string& train_or_test, const string& detName, const vector<string>& seqNAMES, 
+void WriteFPSTxt(const std::string& train_or_test, const std::string& detName, const std::vector<std::string>& seqNAMES, 
 	int& totalProcFrames, float& totalProcSecs, float& totalProcFPS,
-	const vector<int>& frames= vector<int>(), const vector<float>& secs=vector<float>());
+	const std::vector<int>& frames= std::vector<int>(), const std::vector<float>& secs=std::vector<float>());
 
 // Global Utiliy Settings for Visualization
 cv::Mat color_map;
@@ -67,11 +74,11 @@ bool VIS_FRAME_BY_KEY = SKIP_FRAME_BY_FRAME;
 //		Sequence List(*.txt)
 
 const int DB_TYPE = DB_TYPE_KITTI_MOTS;	// DB_TYPE_KITTI_MOTS, DB_TYPE_MOTS20
-const string MODE = "train";			// 'train', 'test'
-const string DETECTOR = "maskrcnn";		// 'maskrcnn'
-const string TRACKER = "GMPHD_MAF";		// Mask-Based Affinity Fusion
-const string SEQ_TXT = "seq/" + sym::DB_NAMES[DB_TYPE] + "_" + MODE +".txt" ;
-const string PARAMS_TXT = "params/"+ sym::DB_NAMES[DB_TYPE] + "_" + MODE + ".txt";
+const std::string MODE = "train";			// 'train', 'test'
+const std::string DETECTOR = "maskrcnn";		// 'maskrcnn'
+const std::string TRACKER = "GMPHD_MAF";		// Mask-Based Affinity Fusion
+const std::string SEQ_TXT = "seq/" + sym::DB_NAMES[DB_TYPE] + "_" + MODE +".txt" ;
+const std::string PARAMS_TXT = "params/"+ sym::DB_NAMES[DB_TYPE] + "_" + MODE + ".txt";
 
 const float DET_SCORE_TH_SCALE = 1.0;	// maskrcnn: 1.0
 const float DET_SCORE_ALPHA = 0.0;
@@ -79,22 +86,22 @@ const float DET_SCORE_ALPHA = 0.0;
 const bool PARALLEL_PROC_ON = true;
 const int TARGET_OBJ = 0;	// 0: Car, 1: Person
  
-vector<string> trkTXTsGT;
+std::vector<std::string> trkTXTsGT;
 
-string class_names[2] = { "CARS", "PERSONS" };
+std::string class_names[2] = { "CARS", "PERSONS" };
 cv::Point2f avg_var_all[2];
 int all_occ[2] = { 0,0 };
 
 VECx3xBBDet detectionsALL[2];
 VECx3xBBTrk tracksGT[2];
-vector<bool> DET_READ_FINs;
+std::vector<bool> DET_READ_FINs;
 
 int main()
 {
 	/// Init
 	InitColorMapTab(color_map, color_tab);
 
-	string m_buffer = "2";
+	std::string m_buffer = "2";
 	
 	cout << "Select MOTS mode in [1] a single scene or [2] a set of scenes: ";
 	cin >> m_buffer;
@@ -109,8 +116,8 @@ int main()
 		cv::Vec2i procObjs(0, 0);
 		int seq_num = 0;
 		int procFrames = 0;	float procSecs = 0.0; float procFPS = 10.0;
-		string seq_name = "0000";
-		vector<string> seqNAMES = vector<string>(1, seq_name);
+		std::string seq_name = "0000";
+		std::vector<std::string> seqNAMES = std::vector<std::string>(1, seq_name);
 
 		RunMOTSequence(seq_num,
 			seq_name,
@@ -125,9 +132,9 @@ int main()
 	// [2]	Run MOTS with a Set of Scenes in Dataset Dirs
 	else if(m == '2') {
 		
-		vector<string> seqNAMEs, seqPATHs;
-		vector<string> detTXTs, trkTXTs;
-		vector<MOTparams> seqParams;
+		std::vector<std::string> seqNAMEs, seqPATHs;
+		std::vector<std::string> detTXTs, trkTXTs;
+		std::vector<MOTparams> seqParams;
 
 		ReadDatasetInfo(DB_TYPE, MODE, DETECTOR, SEQ_TXT, PARAMS_TXT, seqNAMEs, seqPATHs, detTXTs, trkTXTsGT, seqParams);
 
@@ -140,12 +147,12 @@ int main()
 	}
 	return 0;
 }
-void RunMOTDataset(const vector<string>& seqNAMEs, const vector<string>& seqPATHs, const vector<string>& detTXTs, const vector<MOTparams>& params_in) {
+void RunMOTDataset(const std::vector<std::string>& seqNAMEs, const std::vector<std::string>& seqPATHs, const std::vector<std::string>& detTXTs, const std::vector<MOTparams>& params_in) {
 
 	int totalProcFrames = 0;  float totalProcSecs = 1.0;  float totalProcFPS = 10.0;
-	vector<int> frames(seqPATHs.size(), 0);
-	vector<float> secs(seqPATHs.size(), 0.0);
-	vector<cv::Vec2i> objects(seqPATHs.size(), cv::Vec2i(0, 0));
+	std::vector<int> frames(seqPATHs.size(), 0);
+	std::vector<float> secs(seqPATHs.size(), 0.0);
+	std::vector<cv::Vec2i> objects(seqPATHs.size(), cv::Vec2i(0, 0));
 
 	for (int sq = 0; sq < seqPATHs.size(); ++sq) {
 
@@ -163,11 +170,11 @@ void RunMOTDataset(const vector<string>& seqNAMEs, const vector<string>& seqPATH
 	printf("[Total] %d frames / %.3f secs = (%.3f FPS)\n", totalProcFrames, totalProcSecs, totalProcFPS);
 	printf("-------------------------------------------------------\n");
 }
-void RunMOTSequence(const int& sq, const string& seqName, const string& seqPath, const string& detTxt, 
-	cv::Vec2i& procObjs, int &procFrames, float &procSecs, const vector<MOTparams>& params_in) {
+void RunMOTSequence(const int& sq, const std::string& seqName, const std::string& seqPath, const std::string& detTxt, 
+	cv::Vec2i& procObjs, int &procFrames, float &procSecs, const std::vector<MOTparams>& params_in) {
 
 	// Read Sequence Data (Images and Detections)
-	vector<string> imgs = ReadFilesInPath(boost::filesystem::path(seqPath));
+	std::vector<std::string> imgs = ReadFilesInPath(boost::filesystem::path(seqPath));
 	//cout << "[ "<< imgs.size() <<" images ]";
 
 	// Types: 2D Bounding Box, 3D Box, 3D Point Cloud, 2D Intance Segments 
@@ -259,7 +266,7 @@ void RunMOTSequence(const int& sq, const string& seqName, const string& seqPath,
 		cv::Mat imgDet = img;
 		cv::Mat imgTrk = img.clone();
 		
-		vector<BBTrk> out_trks[2];
+		std::vector<BBTrk> out_trks[2];
 		int nProcDets[2] = { 0,0 };
 
 		// Online Tracking (frame by frame process)
@@ -304,7 +311,7 @@ void RunMOTSequence(const int& sq, const string& seqName, const string& seqPath,
 			// Resizing 
 			cv::Mat visDet = imgDet, visTrk = imgTrk_vis;
 			cv::Mat imgDetResized, imgTrkResized;
-			string winTitle[2] = { "Detection", "Tracking" };
+			std::string winTitle[2] = { "Detection", "Tracking" };
 			cv::Size viewSize(frmWidth, frmHeight);
 			if (VISUALIZATION_MAIN_ON && !iFrmCnt) {
 				cv::namedWindow(winTitle[0]);	cv::namedWindow(winTitle[1]);
@@ -377,9 +384,9 @@ void RunMOTSequence(const int& sq, const string& seqName, const string& seqPath,
 	MOTSParallel[TARGET_OBJ]->Destory();
 
 }
-void WriteFPSTxt(const string& train_or_test, const string& detName, const vector<string>& seqNAMES,
+void WriteFPSTxt(const std::string& train_or_test, const std::string& detName, const std::vector<std::string>& seqNAMES,
 	int& totalProcFrames, float& totalProcSecs, float& totalProcFPS,
-	const vector<int>& frames, const vector<float>& secs) {
+	const std::vector<int>& frames, const std::vector<float>& secs) {
 
 	char filePath[256], filePathINTP[256];
 
@@ -422,7 +429,7 @@ void WriteFPSTxt(const string& train_or_test, const string& detName, const vecto
 	//fclose(fp_intp);
 }
 // The Function for Writing the Tracking Results into a Text File
-void WriteMOTResults(const string& train_or_test, const vector<string>& imgPaths, const string& seqName, const int& seqNum, const string& detName, boost::shared_ptr<OnlineTracker> tracker) {
+void WriteMOTResults(const std::string& train_or_test, const std::vector<std::string>& imgPaths, const std::string& seqName, const int& seqNum, const std::string& detName, boost::shared_ptr<OnlineTracker> tracker) {
 
 	char filePath[256];
 
@@ -540,8 +547,8 @@ void WriteMOTResults(const string& train_or_test, const vector<string>& imgPaths
 	fclose(fp);
 }
 // The Function for Writing the Tracking Results into a Text File
-void WriteMOTResults(const string& train_or_test, const vector<string>& imgPaths, const string& seqName, const int& seqNum,
-	const string& detName, boost::shared_ptr<OnlineTracker> carTracker, boost::shared_ptr<OnlineTracker> personTracker) {
+void WriteMOTResults(const std::string& train_or_test, const std::vector<std::string>& imgPaths, const std::string& seqName, const int& seqNum,
+	const std::string& detName, boost::shared_ptr<OnlineTracker> carTracker, boost::shared_ptr<OnlineTracker> personTracker) {
 
 	char filePath[256];
 

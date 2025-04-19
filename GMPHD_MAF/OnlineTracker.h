@@ -35,8 +35,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ONLINE_TRACKER_H
 #define ONLINE_TRACKER_H
 
-#include "types.hpp"
+#include <vector>
+#include <unordered_map>
+#include <opencv2/core.hpp>
+#include "local_types.hpp"
+#include "params.hpp"
 #include "hungarian.h"
+
 
 class OnlineTracker
 {
@@ -51,8 +56,8 @@ public:
 	cv::Scalar color_tab[MAX_OBJECTS];
 
 	// getter and setter
-	string GetSeqName();
-	void SetSeqName(const string seqName);
+	std::string GetSeqName();
+	void SetSeqName(const std::string seqName);
 
 	struct MOTparams GetParams();
 	void SetParams(struct MOTparams params);
@@ -63,9 +68,10 @@ public:
 	int	GetObjType();
 	void SetObjType(int type);
 
-	int frmWidth, frmHeight;
+	int frmWidth;
+	int frmHeight;
 protected:
-	string seqName;
+	std::string seqName;
 
 	struct MOTparams params;
 	int trackObjType;
@@ -85,16 +91,16 @@ protected:
 	// The container for Group management, index (0:t-d-2, 1:t-d-1, 2:t-d), d: delayed time
 	std::unordered_map<int, std::vector<RectID>> *groupsBatch;
 
-	vector<vector<int>> HungarianMethod(vector<vector<double>>& costMatrix, const int& nObs, const int& nStats);
+	std::vector<std::vector<int>> HungarianMethod(std::vector<std::vector<double>>& costMatrix, const int& nObs, const int& nStats);
 	//----------------------------------------------------------------------------
 	/** @brief convert sparse matrix to dense matrix to accelerate Hungarian method.
 	@param sparseMatrix : source matrix (m1)
 	@param denseMatrix : destination matrix (m2)
 	@param sparse_value : sparsity value (0 for cost maximization, a big number for cost minimization)
-	@return vector for translating m2 to m1 indices
+	@return std::vector for translating m2 to m1 indices
 	@remark */
 	//----------------------------------------------------------------------------
-	vector<vector<cv::Vec2i>> cvtSparseMatrix2Dense(const vector<vector<double>>& sparseMatrix, vector<vector<double>>& denseMatrix,
+	std::vector<std::vector<cv::Vec2i>> cvtSparseMatrix2Dense(const std::vector<std::vector<double>>& sparseMatrix, std::vector<std::vector<double>>& denseMatrix,
 		const double& sparse_value = 10000);
 
 	HungarianAlgorithm HungAlgo;
@@ -103,24 +109,24 @@ public:
 	void InitColorTab();
 	cv::Rect RectExceptionHandling(int fWidth, int fHeight, cv::Rect rect);	// Rect Region Correction for preventing out of frame
 	cv::Rect RectExceptionHandling(const int& fWidth, const int& fHeight, cv::Point p1, cv::Point p2);
-	cv::Mat cvPerspectiveTrans2Rect(const cv::Mat img, const vector<cv::Point2f> corners, const cv::Vec3f dims, float ry);
-	void cvPrintMat(cv::Mat matrix, string name = "");
-	void cvPrintVec2Vec(const vector<vector<double>>& costs, const string& name = "");
-	void cvPrintVec2Vec(const vector<vector<int>>& costs, const string& name = "");
-	void cvPrintVec2Vec(const vector<vector<cv::Vec2i>>& costs, const string& name = "");
-	void cvPrintVec2Vec(const vector<vector<bool>>& costs, const string& name = "");
-	string cvPrintRect(const cv::Rect& rec);
+	cv::Mat cvPerspectiveTrans2Rect(const cv::Mat img, const std::vector<cv::Point2f> corners, const cv::Vec3f dims, float ry);
+	void cvPrintMat(cv::Mat matrix, std::string name = "");
+	void cvPrintVec2Vec(const std::vector<std::vector<double>>& costs, const std::string& name = "");
+	void cvPrintVec2Vec(const std::vector<std::vector<int>>& costs, const std::string& name = "");
+	void cvPrintVec2Vec(const std::vector<std::vector<cv::Vec2i>>& costs, const std::string& name = "");
+	void cvPrintVec2Vec(const std::vector<std::vector<bool>>& costs, const std::string& name = "");
+	std::string cvPrintRect(const cv::Rect& rec);
 protected:
 	void InitImagesQueue(int width, int height);
 	void UpdateImageQueue(const cv::Mat img, int Q_SIZE);
 	void InitializeTrackletsContainters();
 
-	void CollectTracksbyID(unordered_map<int, vector<BBTrk>>& tracksbyID, vector<BBTrk>& tracks, bool isInit = false);
-	void ClearOldEmptyTracklet(int current_fn, unordered_map<int, vector<BBTrk>>& tracks, int MAXIMUM_OLD);
+	void CollectTracksbyID(std::unordered_map<int, std::vector<BBTrk>>& tracksbyID, std::vector<BBTrk>& tracks, bool isInit = false);
+	void ClearOldEmptyTracklet(int current_fn, std::unordered_map<int, std::vector<BBTrk>>& tracks, int MAXIMUM_OLD);
 
 	// Motion Estimation
 	cv::Vec4f LinearMotionEstimation(vector<BBTrk> tracklet, int& idx_first_last_fd, int& idx_first, int& idx_last, int MODEL_TYPE, int reverse_offset = 0, int required_Q_size = 0);
-	cv::Vec4f LinearMotionEstimation(unordered_map<int, vector<BBTrk>> tracks, int id, int& idx_first_last_fd, int& idx_first, int& idx_last, int MODEL_TYPE, int reverse_offset = 0, int required_Q_size = 0);
+	cv::Vec4f LinearMotionEstimation(std::unordered_map<int, std::vector<BBTrk>> tracks, int id, int& idx_first_last_fd, int& idx_first, int& idx_last, int MODEL_TYPE, int reverse_offset = 0, int required_Q_size = 0);
 
 	BBTrk KalmanMotionbasedPrediction(BBTrk lostStat, BBTrk liveObs);
 
@@ -128,25 +134,25 @@ protected:
 	bool CopyCovMatDiag(const cv::Mat src, cv::Mat& dst);
 
 	void NormalizeWeight(vector<BBDet>& detVec);
-	void NormalizeWeight(vector<vector<BBDet>>& detVecs);
-	void NormalizeCostVec2Vec(vector<vector<double>>& m_cost, double& min_cost, double& max_cost, const int& MODEL_TYPE);
+	void NormalizeWeight(vector<std::vector<BBDet>>& detVecs);
+	void NormalizeCostVec2Vec(vector<std::vector<double>>& m_cost, double& min_cost, double& max_cost, const int& MODEL_TYPE);
 
 	cv::Rect MergeRect(const cv::Rect A, const cv::Rect B, const float alpha = 0.5);
-	cv::Rect MergeMultiRect(const vector<cv::Rect> recs);
+	cv::Rect MergeMultiRect(const std::vector<cv::Rect> recs);
 
 	cv::Point2f CalcSegMaskCenter(const cv::Rect& rec, const cv::Mat& mask);
 
 	double CalcGaussianProbability(const int dims, const cv::Mat x, const cv::Mat mean, cv::Mat& cov);
 public:
 	float CalcIOU(const cv::Rect& A, const cv::Rect& B);
-	float Calc3DIOU(vector<cv::Vec3f> Ca, cv::Vec3f Da, vector<cv::Vec3f> Cb, cv::Vec3f Db); // Calculate 3D IOU between two Cuboids
+	float Calc3DIOU(vector<cv::Vec3f> Ca, cv::Vec3f Da, std::vector<cv::Vec3f> Cb, cv::Vec3f Db); // Calculate 3D IOU between two Cuboids
 	float CalcSIOA(cv::Rect A, cv::Rect B);
 	float CalcMIOU(const cv::Rect& Ri, const cv::Mat& Si, const cv::Rect& Rj, const cv::Mat& Sj, cv::Mat& mask_union);
 protected:
 	bool IsOutOfFrame(cv::Rect rec, int fWidth, int fHeight, int margin_x = 0, int margin_y = 0);
 	bool IsPointInRect(cv::Point pt, cv::Rect rec);
 
-	void DrawTrkBBS(cv::Mat& img, cv::Rect rec, cv::Scalar color, int thick, int id, double fontScale, string type, bool idBGinBB = false);
+	void DrawTrkBBS(cv::Mat& img, cv::Rect rec, cv::Scalar color, int thick, int id, double fontScale, std::string type, bool idBGinBB = false);
 
 	template < typename Type > std::string to_str(const Type & t)
 	{

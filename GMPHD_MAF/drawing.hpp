@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DRAWING_HPP
 #define DRAWING_HPP
 
-#include "types.hpp"
+#include "local_types.hpp"
 
 
 // user-define funcstions for drawing
