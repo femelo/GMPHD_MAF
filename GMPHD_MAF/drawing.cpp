@@ -403,7 +403,7 @@ void DrawFrameNumberAndFPS(int iFrameCnt, cv::Mat& img, double scale, int thick,
 	// Draw Frame Number
 	char frameCntBuf[8];
 	sprintf(frameCntBuf, "%d", (iFrameCnt + frameOffset) / frames_skip_interval);
-	cv::putText(img, frameCntBuf, cv::Point(10, 65), CV_FONT_HERSHEY_SIMPLEX, scale, cv::Scalar(255, 255, 255), thick);
+	cv::putText(img, frameCntBuf, cv::Point(10, 65), cv::FONT_HERSHEY_SIMPLEX, scale, cv::Scalar(255, 255, 255), thick);
 
 	// Draw Frames Per Second
 	if (sec > 0.0) {
