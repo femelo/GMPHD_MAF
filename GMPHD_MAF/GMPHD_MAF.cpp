@@ -60,7 +60,7 @@ GMPHD_MAF::GMPHD_MAF()
 GMPHD_MAF::~GMPHD_MAF()
 {
 }
-void GMPHD_MAF::Destory() {
+void GMPHD_MAF::Destroy() {
 
 	for (auto& ftr : this->allLiveReliables) {
 		for (auto& tr : ftr) {

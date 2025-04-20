@@ -195,7 +195,7 @@ namespace sym {
 		"Cyclist", "Truck", "Tram",
 		"Misc", "DontCare", "Bus" };
 
-	static std::string DB_NAMES[6] = {"MOT15", "MOT17", "MOT20", "KITTI", "KITTI", "MOTS20"};
+	static std::string DB_NAMES[6] = {"MOT15", "MOT17", "MOT20", "KITTI", "KITTI_MOTS", "MOTS20"};
 	static int FRAME_OFFSETS[6] = {1, 1, 1, 0, 0, 1};
 
 	static cv::Scalar OBJECT_TYPE_COLORS[9] = {

@@ -36,3 +36,5 @@
 
 # Build
 build/
+GMPHD_MAF/data
+GMPHD_MAF/data/

@@ -75,7 +75,7 @@ public:
 	//* Multiple Object Tracking and Segmentation (MOTS) *//
 	int RunMOTS(const int& iFrmCnt, const cv::Mat& img, const std::vector<BBDet>& dets, std::vector<BBTrk>& out_tracks);	// 2D Instance Segmentation
 
-	void Destory();
+	void Destroy();
 private:
 
 	bool isInitialization;

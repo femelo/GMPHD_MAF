@@ -55,7 +55,7 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 	std::vector<std::string> allLines;
 
 	if (boost::filesystem::exists(seqFile)) {
-		std::cout << "Scene Info is loaded from \""<< seqFile <<"\"."<< std::endl;
+		std::cout << "Scene Info is loaded from '"<< seqFile <<"'."<< std::endl;
 		std::ifstream infile(seqFile);
 
 		std::string seqNAME, dataHomeDIR;
@@ -205,8 +205,8 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 
 	VECx2xBBDet detsSeq_out;
 
-	if (boost::filesystem::exists(detTxt)) {
-		std::cout << "[ERROR] Detection file does not exist!\n" << std::endl;
+	if (!boost::filesystem::exists(detTxt)) {
+		std::cout << "[ERROR] Detection file '" << detTxt << "' does not exist!\n" << std::endl;
 	}
 	else { // if (_access(detTxt.c_str(),0)==0) {
 			//std::cout << "[WORK] Detection file path have been loaded." << std::endl;
@@ -376,8 +376,8 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const std::string& trkTxt, VECx2xBBTrk& carTrks, VECx2xBBTrk& personTrks, cv::Mat& carHeatMap, cv::Mat& perHeatMap) {
 	VECx2xBBTrk trksSeq_out;
 
-	if (boost::filesystem::exists(trkTxt)) {
-		std::cout << "[ERROR] Tracking file does not exist!\n" << std::endl;
+	if (!boost::filesystem::exists(trkTxt)) {
+		std::cout << "[ERROR] Tracking file '" << trkTxt << "' does not exist!\n" << std::endl;
 	}
 	else { // if (_access(trkTxt.c_str(),0)==0) {
 			//std::cout << "[WORK] Trkection file path have been loaded." << std::endl;

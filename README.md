@@ -101,9 +101,11 @@ $ cmake .. && make
 
 ## How to run
 
-In `GMPHD_MAF/build` run with
+Run with
+
 ```bash
-$ ./GMPHD_MAF
+$ cd ../GMPHD_MAF
+$ ../build/GMPHD_MAF
 ```
 
 + There are two MOTS processing options:
@@ -119,14 +121,14 @@ $ ./GMPHD_MAF
   - [KITTI-MOTS](https://www.vision.rwth-aachen.de/page/mots) and
   - [MOTS20](https://motchallenge.net/data/MOTS/)
   - MaskRCNN [3] based segmentation results, in txt format, named Tracking Only Challenge Detections in [here](https://www.vision.rwth-aachen.de/page/mots)
-
++ Create a folder `GMPHD_MAF/data` or a symbolic link to that path.
 + Locate the segmentation results in each corresponding dataset location.
   * For instance, copy the results to
-    * `KITTI/tracking/train/det_02_maskrcnn`
-    * `KITTI/tracking/test/det_02_maskrcnn`
-    * `MOTS/MOTS20/test/maskrcnn`
-    * `MOTS/MOTS20/train/maskrcnn`
-  * Keep the folder names `det_02_maskrcnn` in KITTI-MOTS and `maskrcnn` in MOTS20, or modify the function `ReadDatasetInfo()` in [io_mots.cpp](GMPHD_MAF/io_mots.cpp)
+    * `data/MOTS/KITTI_MOTS/training/det_02/maskrcnn`
+    * `data/MOTS/KITTI_MOTS/training/det_02/maskrcnn`
+    * `data/MOTS/MOTS20/test/maskrcnn`
+    * `data/MOTS/MOTS20/train/maskrcnn`
+  * Keep the folder names `det_02/maskrcnn` in KITTI-MOTS and `maskrcnn` in MOTS20, or modify the function `ReadDatasetInfo()` in [io_mots.cpp](GMPHD_MAF/io_mots.cpp)
   
 
 #### 2. Sequence list files of the image sequences
@@ -134,7 +136,7 @@ $ ./GMPHD_MAF
 > Users should specify the dataset path and sequences' names in the sequence list file, e.g., `GMPHD_MAF/seq/MOTS20_train.txt`
 
 ```
-MOTS/MOTS20/train/
+data/MOTS/MOTS20/train/
 MOTS20-02
 MOTS20-05
 MOTS20-09
