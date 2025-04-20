@@ -115,7 +115,7 @@ $ ./GMPHD_MAF
 
 #### 1. Images and public instance segmentation results
 
-+ Download the image seqeunces in [KITTI-MOTS](https://www.vision.rwth-aachen.de/page/mots) and [MOTS20](https://motchallenge.net/data/MOTS/) <br>
++ Download the image sequences in [KITTI-MOTS](https://www.vision.rwth-aachen.de/page/mots) and [MOTS20](https://motchallenge.net/data/MOTS/) <br>
   and MaskRCNN [3] based segmentation results, in txt format, named Tracking Only Challenge Detections in [here](https://www.vision.rwth-aachen.de/page/mots)
 
 * Locate the segmentation results in each corresponding dataset location.
