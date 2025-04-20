@@ -122,10 +122,10 @@ $ ./GMPHD_MAF
 
 + Locate the segmentation results in each corresponding dataset location.
   * For instance, copy the results to
-   - `KITTI/tracking/train/det_02_maskrcnn`
-   - `KITTI/tracking/test/det_02_maskrcnn`
-   - `MOTS/MOTS20/test/maskrcnn`
-   - `MOTS/MOTS20/train/maskrcnn`
+    * `KITTI/tracking/train/det_02_maskrcnn`
+    * `KITTI/tracking/test/det_02_maskrcnn`
+    * `MOTS/MOTS20/test/maskrcnn`
+    * `MOTS/MOTS20/train/maskrcnn`
   * Keep the folder names `det_02_maskrcnn` in KITTI-MOTS and `maskrcnn` in MOTS20, or modify the function `ReadDatasetInfo()` in [io_mots.cpp](GMPHD_MAF/io_mots.cpp)
   
 
