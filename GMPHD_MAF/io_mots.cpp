@@ -32,12 +32,17 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include <string>
 #include <vector>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include "io_mots.hpp"
 #include "params.hpp"
 #include "mask_api.h"
@@ -114,7 +119,7 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 		std::cout << "Scene parameters are loaded from \"" << paramsFile << "\"." << std::endl;
 		std::ifstream infile(paramsFile);
 
-		params_out.ret_size(2);// if the file exists,
+		params_out.resize(2);// if the file exists,
 
 		std::string param_line;		
 		int p;
@@ -127,7 +132,7 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 				vals.push_back(t);
 
 			std::string cls_tmp = vals[1].substr(0, 3);
-			std::transform(cls_tmp.begin(), cls_tmp.end(), cls_tmp.begin(), std::tolower);
+			std::transform(cls_tmp.begin(), cls_tmp.end(), cls_tmp.begin(), [](unsigned char c){ return std::tolower(c); });
 
 			int obj_type;
 			if (!cls_tmp.compare("car"))
@@ -168,8 +173,8 @@ void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::str
 				cv::Vec2f(0.1f, 0.9f), cv::Vec2f(0.1f, 0.9f),/*IOU_THRESHOLDS*/\
 				cv::Vec2b((bool)params[11], (bool)params[12]));/*GATE_ON*/
 		}
-		if (p!=13) {
-			printf("Insufficient parameters (%d%14!=0) !!\n",p);
+		if (p != 13) {
+			printf("Insufficient parameters (%d%14 != 0) !!\n", p);
 		}
 	}
 	else {
@@ -340,7 +345,6 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 
 					personDets.push_back(detsFrmPerson);
 					detsFrmPerson.clear();
-
 
 					iFrmCnt++;
 				} while (iFrmCnt < curFrm);
@@ -522,12 +526,22 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const 
 				// Compute Car Trkection Heat Map
 				if (!carHeatMap.empty()) {
 					cv::Mat segMask64;
-					trk.segMask.convertTo(segMask64, CV_64FC1, 1.0 / (255.0*255.0 * 10000));
+					// Ensure the ROI is valid before proceeding
+					cv::Rect validRoi = trk.rec & cv::Rect(0, 0, carHeatMap.cols, carHeatMap.rows);
+					if (validRoi.area() > 0) {
+						// Resize segMask to match the valid ROI size
+                        cv::Mat resizedSegMask;
+                        cv::resize(trk.segMask, resizedSegMask, validRoi.size());
+						resizedSegMask.convertTo(segMask64, CV_64FC(1), 1.0 / (255.0 * 255.0 * 10000));
+						segMask64 = segMask64 * trk.conf;
 
-					segMask64 = segMask64 * trk.conf;
-
-					cv::Mat* roi = &(carHeatMap(trk.rec));
-					*roi = *roi + segMask64; // cv::add(segMask64, roi, roi);
+						// Get the ROI header (not a pointer to a temporary)
+						cv::Mat roi = carHeatMap(validRoi);
+						// Perform the addition directly on the ROI Mat
+						roi += segMask64; // Or roi = roi + segMask64;
+                        resizedSegMask.release(); // Release the resized mask
+					}
+                    segMask64.release(); // Release segMask64
 				}
 			}
 			else if (IS_PERSON_EVAL(trk.objType)) {
@@ -535,17 +549,26 @@ VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const 
 				// Compute Person Trkection Heat Map
 				if (!perHeatMap.empty()) {
 					cv::Mat segMask64;
-					trk.segMask.convertTo(segMask64, CV_64FC1, 1.0 / (255.0*255.0 * 10000));
+                    // Ensure the ROI is valid before proceeding
+                    cv::Rect validRoi = trk.rec & cv::Rect(0, 0, perHeatMap.cols, perHeatMap.rows);
+                    if (validRoi.area() > 0) {
+                        // Resize segMask to match the valid ROI size
+                        cv::Mat resizedSegMask;
+                        cv::resize(trk.segMask, resizedSegMask, validRoi.size());
+                        resizedSegMask.convertTo(segMask64, CV_64FC(1), 1.0 / (255.0 * 255.0 * 10000));
+                        segMask64 = segMask64 * trk.conf;
 
-					segMask64 = segMask64 * trk.conf;
-
-					cv::Mat* roi = &(perHeatMap(trk.rec));
-					*roi = *roi + segMask64; // cv::add(segMask64, roi, roi);
+                        // Get the ROI header
+                        cv::Mat roi = perHeatMap(validRoi);
+                        // Perform the addition directly on the ROI Mat
+                        roi += segMask64; // Or roi = roi + segMask64;
+                        resizedSegMask.release(); // Release the resized mask
+                    }
+                    segMask64.release(); // Release segMask64
 				}
 			}
 			else {
 				// MISC or DONTCARE
-
 			}
 		}
 		// End Frame
@@ -571,7 +594,7 @@ std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLi
 		T(std::string s, int DB_TYPE) {
 			line = s;
 
-			std::std::string tok_str; // Use std::std::string
+			std::string tok_str; // Use std::string
 			if (DB_TYPE == DB_TYPE_MOT15 || DB_TYPE == DB_TYPE_MOT17 || DB_TYPE == DB_TYPE_MOT20) {
 				tok_str = ", ";
 			}
@@ -599,7 +622,7 @@ std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLi
 	std::vector<T> tempAllLines;
 	std::vector<std::string>::const_iterator iter = allLines.begin();
 	for (; iter != allLines.end(); iter++) {
-		if (iter[0].t_size() < 2) continue;
+		if (iter[0].size() < 2) continue;
 
 		tempAllLines.push_back(T(iter[0], DB_TYPE));
 	}
@@ -619,7 +642,7 @@ std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLi
 
 void SaveResultImgs(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqNAME, const int& iFrmCnt, const cv::Mat& img, const float& ths_det, const std::string& tag) {
 	
-	std::std::string strThDetConf;
+	std::string strThDetConf;
 	float DET_MIN_CONF = ths_det;// sym::DET_SCORE_THS[iDET_TH] / DET_SCORE_TH_SCALE - DET_SCORE_ALPHA;
 	if (DET_MIN_CONF <= 0.9 || DET_MIN_CONF == 1.0)
 		strThDetConf = boost::str(boost::format("%.1f") % (DET_MIN_CONF));
@@ -671,9 +694,9 @@ int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::S
 	for (auto& detFrm : in_dets) {
 		std::vector<BBDet> detsFrm_trunc;
 
-		int nDets = detFrm.t_size();
-		Concurrency::parallel_for(0, nDets, [&](int d) {
-			//	for (auto& det : detFrm) {
+		int nDets = detFrm.size();
+		#pragma omp parallel for
+		for (int d = 0; d < nDets; ++d) {
 
 			if (detFrm[d].confidence >= DET_SCORE_TH) {
 				int iObjType = (int)detFrm[d].object_type;
@@ -687,7 +710,7 @@ int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::S
 				nValidObjs++;
 			}
 		}
-		);
+
 		for (auto& det : detFrm) {
 			if (!det.segMask.empty())
 				detsFrm_trunc.push_back(det);
@@ -710,17 +733,18 @@ int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::S
 	return nValidObjs;
 }
 
-// Convert "cv::Mat mask" to "std::std::string Rle Encoded mask"
-std::std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz, const cv::Rect& bbox, const bool& viewDetail) {
+// Convert "cv::Mat mask" to "std::string Rle Encoded mask"
+std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz, const cv::Rect& bbox, const bool& viewDetail) {
 
 	int frmW = in_frmImgSz.width;
 	int frmH = in_frmImgSz.height;
 
-	cv::Mat maskMATinFrm(frmH, frmW, CV_8UC1, cv::Scalar(0));
-	byte *mask = new byte[frmW*frmH * 1];
-	RLE maskRLE;
+	cv::Mat maskMATinFrm(frmH, frmW, CV_8UC(1), cv::Scalar(0));
+	t_byte *mask = new t_byte[frmW * frmH * 1];
+	t_RLE maskRLE;
 	// 아니.. 왜 이렇게 짰지.. 이럼 조금이라도 밖으로 나가면 그냥 0이 잖아
-	if (viewDetail) printf("(1)");
+	if (viewDetail)
+		printf("(1)");
 	if (bbox.width <= 0 || bbox.height <= 0)
 	{
 		/*printf("[ERROR] Segment is out of frame in CvtMAT2RleSTR() at line 461 %d%d%d%d%d%d\n",
@@ -737,21 +761,25 @@ std::std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frm
 				mask[i*frmH + j] = maskMATinFrm.at<uchar>(j, i) ? 255 : 0;
 			}
 		}
-		if (viewDetail) printf("(3)");
+		if (viewDetail)
+			printf("(3)");
 	}
 	rleEncode(&maskRLE, mask, frmW, frmH, 1);
-	if (viewDetail) printf("(4)");
+	if (viewDetail)
+		printf("(4)");
 
 	delete[]mask;
 	maskMATinFrm.release();
-	if (viewDetail) printf("(5)");
+	if (viewDetail)
+		printf("(5)");
 	char *maskCharPtr = rleToString(&maskRLE);
-	if (viewDetail) printf("(6)");
+	if (viewDetail)
+		printf("(6)");
 	return std::string(maskCharPtr);
 }
 
-// Convert  "std::std::string Rle Encoded mask" to "cv::Mat mask"
-void CvtRleSTR2MAT(const std::std::string &in_maskRleSTR, const cv::Size& in_segImgSz, cv::Mat& out_maskMAT, cv::Rect& out_objRec) {
+// Convert  "std::string Rle Encoded mask" to "cv::Mat mask"
+void CvtRleSTR2MAT(const std::string &in_maskRleSTR, const cv::Size& in_segImgSz, cv::Mat& out_maskMAT, cv::Rect& out_objRec) {
 
 	// Decode a run-length data
 	std::string rleStr = in_maskRleSTR;
@@ -763,19 +791,20 @@ void CvtRleSTR2MAT(const std::std::string &in_maskRleSTR, const cv::Size& in_seg
 	//std::cout << rleStrUTF8 << std::endl;
 	//std::cout << relStr_w << std::endl; // "를 인식하네, 어쨌든 안됨
 
-	RLE rleTemp;
-	t_siz segImgW = (t_siz)in_segImgSz.width; t_siz segImgH = (t_siz)in_segImgSz.height;
+	t_RLE rleTemp;
+	t_siz segImgW = (t_siz)in_segImgSz.width;
+	t_siz segImgH = (t_siz)in_segImgSz.height;
 
-	// frame image t_size = transposistion of segment image t_size
+	// frame image size = transposistion of segment image size
 	/// rows (height), cols (width) 
-	cv::Mat matMaskFrm(in_segImgSz.width, in_segImgSz.height, CV_8UC1, cv::Scalar(0));
+	cv::Mat matMaskFrm(in_segImgSz.width, in_segImgSz.height, CV_8UC(1), cv::Scalar(0));
 
 	int nSize = rleStr.length() + 1;
 	int frmSize = in_segImgSz.area();
-	byte *mask = new byte[frmSize * 1];
+	t_byte *mask = new t_byte[frmSize * 1];
 
 	char *s = new char[nSize];
-	sprintf(s, nSize, "%s", rleStr.c_str());
+	sprintf(s, "%s", rleStr.c_str());
 	rleFrString(&rleTemp, s, segImgH, segImgW);
 	rleDecode(&rleTemp, mask, 1);
 	uint a = 0;

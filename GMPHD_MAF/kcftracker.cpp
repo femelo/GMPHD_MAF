@@ -79,13 +79,16 @@ and on any theory of liability, whether in contract, strict liability,
 or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
  */
-#pragma once
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc/imgproc_c.h> // Required for cvIplImage
 #include "kcftracker.hpp"
 #include "ffttools.hpp"
 #include "recttools.hpp"
 #include "fhog.hpp"
 #include "labdata.hpp"
+
 
 // Constructor
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, bool roi_only)
@@ -902,7 +905,8 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
 		extracted_roi.x, extracted_roi.y, extracted_roi.width, extracted_roi.height);*/
 	// HOG features
     if (_hogfeatures) { 
-        IplImage z_ipl = z;
+        // IplImage z_ipl = z; // This line causes the error
+        IplImage z_ipl = cvIplImage(z); // Correct conversion
 		//printf("z(%d,%d) by using tmpl(%d,%d)->",z.rows,z.cols, _tmpl_sz.height,_tmpl_sz.width);
         CvLSVMFeatureMapCaskade *map;
         getFeatureMaps(&z_ipl, cell_size, &map);
@@ -1016,7 +1020,7 @@ cv::Mat KCFTracker::getFeaturesROI(const cv::Mat & image, const cv::Rect &roi_sp
 
 	// HOG features
 	if (_hogfeatures) {
-		IplImage z_ipl = z;
+		IplImage z_ipl = cvIplImage(z); // Correct conversion
 		CvLSVMFeatureMapCaskade *map;
 		getFeatureMaps(&z_ipl, cell_size, &map);
 		normalizeAndTruncate(map, 0.2f);
