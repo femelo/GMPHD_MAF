@@ -8,7 +8,7 @@ All rights reserved.
 This software is an implementation of the GMPHD_MAF tracker,
 which not only refers to the paper entitled
 "Online Multi-Object Tracking and Segmentation with GMPHD Filter and Mask-Based Affinity Fusion"
-but also is available at https://github.com/SonginCV/GMPHD_MAF.
+but also is available at https://github.com/SonginCV/MAF_HDA.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
