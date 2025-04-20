@@ -115,11 +115,17 @@ $ ./GMPHD_MAF
 
 #### 1. Images and public instance segmentation results
 
-+ Download the image sequences in [KITTI-MOTS](https://www.vision.rwth-aachen.de/page/mots) and [MOTS20](https://motchallenge.net/data/MOTS/) <br>
-  and MaskRCNN [3] based segmentation results, in txt format, named Tracking Only Challenge Detections in [here](https://www.vision.rwth-aachen.de/page/mots)
++ Download the image sequences from:
+  - [KITTI-MOTS](https://www.vision.rwth-aachen.de/page/mots) and
+  - [MOTS20](https://motchallenge.net/data/MOTS/)
+  - MaskRCNN [3] based segmentation results, in txt format, named Tracking Only Challenge Detections in [here](https://www.vision.rwth-aachen.de/page/mots)
 
-* Locate the segmentation results in each corresponding dataset location.
-  * For instance, copy the results to `F:\KITTI\tracking\train\det_02_maskrcnn`, `F:\KITTI\tracking\test\det_02_maskrcnn` , `F:\MOTS\MOTS20\test\maskrcnn`, and `F:\MOTS\MOTS20\train\maskrcnn`. 
++ Locate the segmentation results in each corresponding dataset location.
+  * For instance, copy the results to
+   - `KITTI/tracking/train/det_02_maskrcnn`
+   - `KITTI/tracking/test/det_02_maskrcnn`
+   - `MOTS/MOTS20/test/maskrcnn`
+   - `MOTS/MOTS20/train/maskrcnn`
   * Keep the folder names `det_02_maskrcnn` in KITTI-MOTS and `maskrcnn` in MOTS20, or modify the function `ReadDatasetInfo()` in [io_mots.cpp](GMPHD_MAF/io_mots.cpp)
   
 
