@@ -22,7 +22,7 @@ endif()
 set(Boost_USE_STATIC_LIBS ON)       # Prefer static Boost libraries
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)   # Be cautious with static runtime linking
-find_package(Boost 1.74.0 COMPONENTS filesystem regex REQUIRED) # Mark as REQUIRED
+find_package(Boost 1.81.0 COMPONENTS filesystem regex REQUIRED) # Mark as REQUIRED
 
 # Find OpenCV
 find_package(OpenCV REQUIRED) # Mark as REQUIRED
