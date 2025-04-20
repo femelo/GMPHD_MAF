@@ -125,10 +125,10 @@ $ ./GMPHD_MAF
 
 #### 2. Sequence list files of the image sequences
 
-> Users should specify the dataset path and sequences' names in the sequence list file.
+> Users should specify the dataset path and sequences' names in the sequence list file, e.g., `GMPHD_MAF/seq/MOTS20_train.txt`
+
 ```
-e.g., GMPHD_MAF\seq\MOTS20_train.txt
-F:\MOTS\MOTS20\train\
+MOTS/MOTS20/train/
 MOTS20-02
 MOTS20-05
 MOTS20-09
@@ -137,9 +137,7 @@ MOTS20-11
 
 #### 3. Parameter files
 
-```
-e.g., GMPHD_MAF\params\MOTS20_train.txt
-```
+e.g., `GMPHD_MAF/params/MOTS20_train.txt`
 
 #### 4. Check parameters
 
