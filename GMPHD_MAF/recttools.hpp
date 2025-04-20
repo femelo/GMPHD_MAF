@@ -32,15 +32,14 @@ and on any theory of liability, whether in contract, strict liability,
 or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
 */
-
-#pragma once
+#ifndef _OPENCV_RECTTOOLS_HPP_
+#define _OPENCV_RECTTOOLS_HPP_
 
 //#include <cv.h>
 #include <math.h>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 
-#ifndef _OPENCV_RECTTOOLS_HPP_
-#define _OPENCV_RECTTOOLS_HPP_
-#endif
 
 namespace RectTools
 {
@@ -129,12 +128,11 @@ inline cv::Mat subwindow(const cv::Mat &in, const cv::Rect & window, int borderT
 
 inline cv::Mat getGrayImage(cv::Mat img)
 {
-    cv::cvtColor(img, img, CV_BGR2GRAY);
+    cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
     img.convertTo(img, CV_32F, 1 / 255.f);
     return img;
 }
 
 }
 
-
-
+#endif

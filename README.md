@@ -1,51 +1,61 @@
 # I. Introduction
-## Online Multi-Object Tracking and Segmentation <br> with Embedding Mask-based Affinity Fusion in Hierachical Data Association (MAF_HDA)
-This repository includes an implementation of the GMPHD_MAF tracker in C/C++ with a demo code and supplementary materials.
+
+## GMPHD - MAF HDA
+
+This repository includes a Linux implementation of the GMPHD_MAF tracker in C/C++ with a demo code based on the
+original implementation: [https://github.com/SonginCV/MAF_HDA](https://github.com/SonginCV/MAF_HDA).
+
 
 ## Progress
 
 + [2021.06.18] README.md released <br>
 + [2021.06.17] First full upload of a C/C++ implementation in VS2017 project (with VC15), **_v0.2.0_** <br>
 + [2021.06.11] Full manuscript upload in **_arXiv_**
++ [2025.04.20] Port to Linux (by myself)
 
-## Paper 
-
-+ The paper is available in two versions:
-[[BMTT2020 website](https://motchallenge.net/workshops/bmtt2020/index.html)]
-and [[arxiv](https://arxiv.org/abs/2009.00100)]. <br>
-+ The arXiv preprint is an extension of the BMTT worshop paper.
 
 # II. User guide
 
 ## Development environment
-+ Windows 10  (64 bit) <br>
-+ Visual Studio 2017  (64 bit)
 
-### Programming languages
-+ Visual C/C++ (VC15)
++ Debian GNU/Linux 12 (bookworm)
+
+
+### Programming language
+
++ C++17
+
+### Compiler
+
++ GCC 12
 
 ### Libraries
-[OpenCV 3.4.1](https://www.opencv.org/opencv-3-4-1.html) and 
-[boost 1.74.0 (Windows Binaries)](https://sourceforge.net/projects/boost/files/boost-binaries/1.74.0/) 
-were used to implement the GMPHD_MAF tracker.
-+ Download [OpenCV Win Pack](https://sourceforge.net/projects/opencvlibrary/files/opencv-win/3.4.1/opencv-3.4.1-vc14_vc15.exe/download) and [boost_1_74_0-msvc-14.1-64.exe](https://sourceforge.net/projects/boost/files/boost-binaries/1.74.0/boost_1_74_0-msvc-14.1-64.exe/download) to run our tracker in Visual Studio 2017 (64 bit).
+
++ OpenCV 4.6.0 
++ Boost 1.81.0 (Windows Binaries)
+
+To install dependencies:
+
+```bash
+$ sudo apt install -y g++-12 libboost1.81-dev libboost1.81.0-filesystem-dev libboost1.81.0-regex-dev libopencv-dev
+```
 
 ## Project source
+
 ### File tree
+
 ```
 PROJECT_HOME
-├── GMPHD_MAF.sln  <-- **solution file for the project**
-└── GMPHD_MAF      
+├── GMPHD_MAF      
     ├── demo_GMPHD_MAF.cpp                            <-- **the main function** including demos.
     ├── OnlineTracker.h, OnlineTracker.cpp            <-- the parent class of GMPHD_MAF
     ├── GMPHD_MAF.h, GMPHD_MAF.cpp                    <-- *a class implementation of the GMPHD_MAF tracker* inherited from OnlineTracker class
-    ├── kcftracker.hpp&cpp, VOT.h, ffttols.hpp, fhog.hpp&cpp, labdata.hpp, recttols.hpp <-- a C++ code set of KCF [2] implementaion
-    ├── utils.hpp                                     <-- a header file including essential containers and preprocessors for GMPHD_MAF
-    ├── io_mots.hpp&cpp, mask_api.h&cpp               <-- read/write functions for MOTS data format (e.g., run-length encoding)
+    ├── kcftracker.hpp/cpp, VOT.h, ffttols.hpp, fhog.hpp/cpp, labdata.hpp, recttols.hpp <-- a C++ code set of KCF [2] implementaion
+    ├── local_types.hpp                               <-- a header file with several types used in the project
+    ├── params.hpp                                    <-- a header file including essential containers and preprocessors for GMPHD_MAF
+    ├── io_mots.hpp/cpp, mask_api.h/cpp               <-- read/write functions for MOTS data format (e.g., run-length encoding)
     ├── drawing.hpp, drawing.cpp                      <-- drawing functions for MOTS results visualization
     ├── hungarian.h, hungarian.cpp                    <-- a class implementation of the Hungarian Algorithm 
-    ├── pch.h                                         <-- precompiled header including essential header files
-    ├── GMPHD_MAF.vcxproj, GMPHD_MAF.vcxproj.filters  <-- VS project file, VS project filter file
     ├── params                                        <-- text files containing scene parameters
     |   └── KITTI_test.txt, KITTI_train.txt, MOTS20_test.txt, MOTS20_train.txt
     ├── seq                                           <-- text files containing dataset paths and sequences' names
@@ -62,34 +72,59 @@ PROJECT_HOME
             └── test, train 
 ```
 
-C++ implementation of the Hungarian Algorithm : 
-`
-hungarian.h, hungarian.cpp 
-`
-,<br> refering to [#mcximing/hungarian-algorithm-cpp](https://github.com/mcximing/hungarian-algorithm-cpp) <br> 
+C++ implementation of the Hungarian Algorithm:
 
-C++ implementaion of KCF [2] :
-`
-kcftracker.hpp&cpp, VOT.h, ffttols.hpp, fhog.hpp&cpp, labdata.hpp, recttols.hpp
-`
-,<br> refering to [#joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp) <br> 
+- `hungarian.h/cpp`
+
+Reference: [#mcximing/hungarian-algorithm-cpp](https://github.com/mcximing/hungarian-algorithm-cpp)
+
+
+C++ implementation of Kernelized Correlation Filter [2] :
+
+- `kcftracker.hpp/cpp`
+- `VOT.h`
+- `ffttols.hpp`
+- `fhog.hpp/cpp`
+- `labdata.hpp`
+- `recttols.hpp`
+
+Reference: [#joaofaro/KCFcpp](https://github.com/joaofaro/KCFcpp)
+
+
+## How to build
+
+```bash
+$ cd GMPHD_MAF
+$ mkdir build && cd build
+$ cmake .. && make
+```
 
 ## How to run
-1. Open the solution file **GMPHD_MAF.sln**.
-2. Link and include **OpenCV3.4.1** and **boost1.74.0** libraries to the project w/ VC15_x64.
-3. Press Ctrl+F5 in **Release mode (x64)**
-+ We provide two MOTS processing options. One is "1: a single scene" and the other is "2: a set of scenes".
+
+In `GMPHD_MAF/build` run with
+```bash
+$ ./GMPHD_MAF
+```
+
++ There are two MOTS processing options:
+  1. a single scene
+  2. a set of scenes
+
 
 ## Input
+
 #### 1. Images and public instance segmentation results
+
 + Download the image seqeunces in [KITTI-MOTS](https://www.vision.rwth-aachen.de/page/mots) and [MOTS20](https://motchallenge.net/data/MOTS/) <br>
   and MaskRCNN [3] based segmentation results, in txt format, named Tracking Only Challenge Detections in [here](https://www.vision.rwth-aachen.de/page/mots)
 
-* Locate the segmentation results in each corresponding dataset location. <br>
+* Locate the segmentation results in each corresponding dataset location.
   * For instance, copy the results to `F:\KITTI\tracking\train\det_02_maskrcnn`, `F:\KITTI\tracking\test\det_02_maskrcnn` , `F:\MOTS\MOTS20\test\maskrcnn`, and `F:\MOTS\MOTS20\train\maskrcnn`. 
   * Keep the folder names `det_02_maskrcnn` in KITTI-MOTS and `maskrcnn` in MOTS20, or modify the function `ReadDatasetInfo()` in [io_mots.cpp](GMPHD_MAF/io_mots.cpp)
   
+
 #### 2. Sequence list files of the image sequences
+
 > Users should specify the dataset path and sequences' names in the sequence list file.
 ```
 e.g., GMPHD_MAF\seq\MOTS20_train.txt
@@ -101,11 +136,17 @@ MOTS20-11
 ```
 
 #### 3. Parameter files
+
 ```
 e.g., GMPHD_MAF\params\MOTS20_train.txt
 ```
-#### 4. Please check DB_TYPE, mode:"train" or "test", and the input files' locations in ([demo_GMPHD_MAF.cpp](GMPHD_MAF/demo_GMPHD_MAF.cpp))
-```
+
+#### 4. Check parameters
+
+Please check DB_TYPE, mode: "train" or "test", and the input files' locations in ([demo_GMPHD_MAF.cpp](GMPHD_MAF/demo_GMPHD_MAF.cpp))
+
+
+```c++
 // demo_GMPHD_MAF.cpp
 ...
 const int DB_TYPE = DB_TYPE_MOTS20;		// DB_TYPE_KITTI_MOTS, DB_TYPE_MOTS20
@@ -116,15 +157,23 @@ const string SEQ_TXT = "seq/" + sym::DB_NAMES[DB_TYPE] + "_" + MODE +".txt" ;
 const string PARAMS_TXT = "params/"+ sym::DB_NAMES[DB_TYPE] + "_" + MODE + ".txt";
 ...
 ```
+
 ## Output
 
 ### Results files
+
   + MOTS results files are saved at `GMPHD_MAF/res`
-### Visualization options in [utils.hpp](GMPHD_MAF/utils.hpp)
-```
+
+
+### Visualization options
+
+Check visualization options in [params.hpp](GMPHD_MAF/params.hpp).
+
+```c++
 #define VISUALIZATION_MAIN_ON 0
 #define SKIP_FRAME_BY_FRAME 0
 ```
+
 > VISUALIZATION_MAIN_ON: 0(off), 1(on)
   + You can see the visualization windows of detection and tracking.
     * At initial frame, press any key to start tracking process.
@@ -132,29 +181,30 @@ const string PARAMS_TXT = "params/"+ sym::DB_NAMES[DB_TYPE] + "_" + MODE + ".txt
 > SKIP_FRAME_BY_FRAME: 0(off), 1(on)
   + You can see the results, frame-by-frame. (by pressing any key). 
 
-### Examples in KITTI object tracking test 0018 sequence.
+
+### Examples
+
+In KITTI object tracking test 0018 sequence.
+
 ![public segmentation](GMPHD_MAF/img/KITTI_test-0018_det_256bits.gif)
 
 `▶ Public segmentation results by MaskRCNN [2]`
 
 ![MOTS results](GMPHD_MAF/img/KITTI_test-0018_trk_256bits.gif)
 
-`▶ MOTS results by GMPHD_MAF (Ours)`
+`▶ MOTS results by GMPHD_MAF`
 
-### Console window
-![console window](GMPHD_MAF/img/KITTI_train-0000_demo_2_end.jpg)
 
-`▶ Console window exampled when user select a single scene mode`
+## Experimental results
 
-## Experimental Results (available at the benchmark websites)
-
-We participated "tracking only" track in 5th BMTT MOTChallenge Workshop: Multi-Object Tracking and Segmentation in conjunction with CVPR 2020.
+Original authors participated in "tracking only" track in 5th BMTT MOTChallenge Workshop: Multi-Object Tracking and Segmentation in conjunction with CVPR 2020.
 
 The results are available in 
 CVPR 2020 MOTSChallenge [[link](https://motchallenge.net/results/CVPR_2020_MOTS_Challenge/)], 
 MOTS20 [[link](https://motchallenge.net/results/MOTS/)],
 
 KITTI-MOTS w/ sMOTSA measure [[link](http://www.cvlibs.net/datasets/kitti/old_eval_mots.php)] and w/ HOTA measure [[link](http://www.cvlibs.net/datasets/kitti/eval_mots.php)].
+
 
 # III. References
 
@@ -168,7 +218,10 @@ KITTI-MOTS w/ sMOTSA measure [[link](http://www.cvlibs.net/datasets/kitti/old_ev
 [[paper]](https://openaccess.thecvf.com/content_ICCV_2017/papers/He_Mask_R-CNN_ICCV_2017_paper.pdf)
 [[arxiv]](https://arxiv.org/abs/1703.06870)
 
-## Citation [[arxiv]](https://arxiv.org/abs/1907.13347)
+
+## Citation
+
+Article: [[arxiv]](https://arxiv.org/abs/1907.13347)
 
 ```
 \bibitem{gmphdmaf}
@@ -177,6 +230,5 @@ KITTI-MOTS w/ sMOTSA measure [[link](http://www.cvlibs.net/datasets/kitti/old_ev
   [{O}nline]. Available: ar{X}iv:2009.00100.
 ```
 
-# IV. [License](https://github.com/SonginCV/GMPHD_MAF/blob/master/LICENSE)
+# IV. [License](https://github.com/femelo/GMPHD_MAF/blob/master/LICENSE)
 ### BSD 2-Clause "Simplified" License
-

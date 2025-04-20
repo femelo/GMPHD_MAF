@@ -38,17 +38,17 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-
+#ifndef FHOG_HPP
+#define FHOG_HPP
 
 //Modified from latentsvm module's "lsvmc_featurepyramid.cpp".
 
 //#include "precomp.hpp"
 //#include "_lsvmc_latentsvm.h"
 //#include "_lsvmc_resizeimg.h"
-#pragma once
-#include "pch.h"
 
 #include "fhog.hpp"
+
 
 
 #ifdef HAVE_TBB
@@ -66,6 +66,7 @@
 #endif
 
 
+
 /*
 // Getting feature map for the selected subimage
 //
@@ -79,6 +80,7 @@
 // RESULT
 // Error status
 */
+
 int getFeatureMaps(const IplImage* image, const int k, CvLSVMFeatureMapCaskade **map)
 {
     int sizeX, sizeY;
@@ -316,7 +318,7 @@ int normalizeAndTruncate(CvLSVMFeatureMapCaskade *map, const float alfa)
         partOfNorm[i] = valOfNorm;
     }/*for(i = 0; i < sizeX * sizeY; i++)*/
     
-    sizeX -= 2; // sym, sizeX ³ª sizeY °¡ 2ÀÏ ¶§ ¿¡·¯ ¹ß»ý
+    sizeX -= 2; // sym, sizeX ï¿½ï¿½ sizeY ï¿½ï¿½ 2ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½
     sizeY -= 2;
 
     newData = (float *)malloc (sizeof(float) * (sizeX * sizeY * pp));
@@ -511,3 +513,5 @@ int freeFeatureMapObject (CvLSVMFeatureMapCaskade **obj)
     (*obj) = NULL;
     return LATENT_SVM_OK;
 }
+
+#endif // FHOG_HPP

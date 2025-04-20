@@ -79,26 +79,26 @@ and on any theory of liability, whether in contract, strict liability,
 or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
  */
-
-#pragma once
-
-#include "VOT.h"
-
 #ifndef _OPENCV_KCFTRACKER_HPP_
 #define _OPENCV_KCFTRACKER_HPP_
+
+#include "VOT.h"
+#include <opencv2/core.hpp>
 
 
 class KCFTracker : public VOT
 {
 public:
     // Constructor
-	// ±âÁ¸ ¿É¼Ç (dense):	true, false, true, true, false
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½É¼ï¿½ (dense):	true, false, true, true, false
 	/// bool hog = true, bool fixed_window = false, bool multiscale = true, bool lab = true, bool roi_only = false
-	// ÀýÃæ ¿É¼Ç (medium):	true, true, false, true, false
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½É¼ï¿½ (medium):	true, true, false, true, false
 	/// bool hog = true, bool fixed_window = true, bool multiscale = false, bool lab = true, bool roi_only = false
-	// °£¼ÒÈ­ ¿É¼Ç (simple):	false, true, false, false, false (1.3~1.4 ¹è ´õ ºü¸§)
+	// ï¿½ï¿½ï¿½ï¿½È­ ï¿½É¼ï¿½ (simple):	false, true, false, false, false (1.3~1.4 ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 	/// bool hog = false, bool fixed_window = true, bool multiscale = false, bool lab = false, bool roi_only = false
 	KCFTracker(bool hog = true, bool fixed_window = true, bool multiscale = false, bool lab = true, bool roi_only = false);
+	// Destructor
+	~KCFTracker() {};
 
     // Initialize tracker 
     virtual void init(const cv::Mat& image, const cv::Rect &roi, const cv::Mat &mask = cv::Mat(), const bool& USE_MASK = false);
@@ -193,7 +193,7 @@ private:
 		//}
 
 		if (img_gray.empty()) {
-			CV_Error(CV_StsBadArg, "Sample image is empty. Please adjust your path, so it points to a valid input image!");
+			CV_Error(cv::Error::StsBadArg, "Sample image is empty. Please adjust your path, so it points to a valid input image!");
 		}
 		color_map = cv::Mat(32, 256, CV_8UC3);
 
@@ -232,7 +232,7 @@ private:
 	{
 		/*
 		<Mat::type()>
-		depth¿¡ channels±îÁö Æ÷ÇÔÇÏ´Â °³³ä ex. CV_64FC1
+		depthï¿½ï¿½ channelsï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ex. CV_64FC1
 		<Mat::depth()>
 		CV_8U - 8-bit unsigned integers ( 0..255 )
 		CV_8S - 8-bit signed integers ( -128..127 )
@@ -283,3 +283,4 @@ private:
 	}
 };
 #endif
+// _OPENCV_KCFTRACKER_HPP_

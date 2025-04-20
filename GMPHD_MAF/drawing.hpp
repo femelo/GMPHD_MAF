@@ -32,16 +32,12 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#pragma once
+#ifndef DRAWING_HPP
+#define DRAWING_HPP
 
-#include "utils.hpp"
-
-// #include <opencv2\opencv.hpp>
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
-#include "opencv2\video\tracking.hpp"	// Kalman Filtering
-#include <opencv2/imgproc.hpp>			// image transformation
-
+#include "local_types.hpp"
+#include "params.hpp"
+#include "drawing.hpp"
 
 // user-define funcstions for drawing
 void InitColorMapTab(cv::Mat& color_map, cv::Scalar* color_tab);
@@ -64,3 +60,5 @@ void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, con
 void DrawFrameNumberAndFPS(int iFrameCnt, cv::Mat& img, double scale, int thick, int frameOffset = 0, int frames_skip_interval = 1, double sec = -1.0);
 
 void cvPrintMat(cv::Mat matrix, std::string name);
+
+#endif // DRAWING_HPP

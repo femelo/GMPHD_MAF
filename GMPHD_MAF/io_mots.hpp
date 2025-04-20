@@ -32,44 +32,33 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#pragma once
+#ifndef IO_MOTS_HPP
+#define IO_MOTS_HPP
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
+
 #include <string>
 #include <vector>
 
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <boost/algorithm/string.hpp>
-
-#include <io.h>
-
-#include "utils.hpp"
-#include "mask_api.h"
-
-#include <ppl.h>
-
-using namespace std;
-using namespace boost::filesystem;
+#include "local_types.hpp"
+#include "params.hpp"
 
 // User-defined functions for I/O,..
 
 // Read
-void ReadDatasetInfo(const int& DB_TYPE, const string& MODE, const string& detNAME, const string& seqFile, const string& paramsFile,
-	vector<string>& seqNames, vector<string>& seqPaths, vector<string>& detTxts, vector<string>& trkTxtsGT, vector<MOTparams>& params_out);
-vector<string> ReadFilesInPath(boost::filesystem::path p);
-VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const string& detNAME, const string& detTxt,
+void ReadDatasetInfo(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqFile, const std::string& paramsFile,
+	std::vector<std::string>& seqNames, std::vector<std::string>& seqPaths, std::vector<std::string>& detTxts, std::vector<std::string>& trkTxtsGT, std::vector<MOTparams>& params_out);
+std::vector<std::string> ReadFilesInPath(boost::filesystem::path p);
+VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, const std::string& detTxt,
 	VECx2xBBDet& carDets, VECx2xBBDet& personDets);
-VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const string& trkNAME, const string& trkTxt,
+VECx2xBBTrk ReadTracksSeq(const int& DB_TYPE, const std::string& trkNAME, const std::string& trkTxt,
 	VECx2xBBTrk& carTrks, VECx2xBBTrk& persoTrks, cv::Mat& carHeatMap, cv::Mat& perHeatMap);
 // The Function for Sorting Detection Responses by frame number (ascending order)
-vector<string> SortAllDetections(const vector<string>& allLines, int DB_TYPE = DB_TYPE_MOT17);
+std::vector<std::string> SortAllDetections(const std::vector<std::string>& allLines, int DB_TYPE = DB_TYPE_MOT17);
 
 // Write
-void SaveResultImgs(const int& DB_TYPE, const string& MODE, const string& detNAME, const string& seqNAME,
-	const int& iFrmCnt, const cv::Mat& img, const float& ths_det = 0.0, const string& tag = "");
+void SaveResultImgs(const int& DB_TYPE, const std::string& MODE, const std::string& detNAME, const std::string& seqNAME,
+	const int& iFrmCnt, const cv::Mat& img, const float& ths_det = 0.0, const std::string& tag = "");
 
 // Convert, divide, interpolate
 // convert
@@ -77,3 +66,6 @@ std::string CvtMAT2RleSTR(const cv::Mat& in_maskMAT, const cv::Size& in_frmImgSz
 int CvtRleSTR2MATVecSeq(VECx2xBBDet& in_dets, VECx2xBBDet& out_dets, const cv::Size& frm_sz, const float& DET_SCORE_TH = 0.0);
 void CvtRleSTR2MAT(const std::string &in_maskRleSTR, const cv::Size& in_segImgSz, cv::Mat& out_maskMAT, cv::Rect& out_objRec);
 cv::Rect CvtMAT2RECT(const cv::Size& in_segImgSz, const cv::Mat& in_maskMAT);
+
+#endif // IO_MOTS_HPP
+// End of file

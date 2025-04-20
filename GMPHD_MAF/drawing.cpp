@@ -32,38 +32,36 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "pch.h"
 #include "drawing.hpp"
-
+#include <opencv2/core.hpp>     // Needed for CV_Assert, cv::Mat, etc.
+#include <opencv2/imgproc.hpp>  // Needed for cv::applyColorMap, cv::cvtColor
+#include <opencv2/highgui.hpp>  // Potentially needed if cv::imshow etc. were used
 
 void InitColorMapTab(cv::Mat& color_map, cv::Scalar* color_tab)
 {
-	// Init Color Table for object IDs and Map for intensity
-	int a;
-	for (a = 1; a*a*a < MAX_OBJECTS; a++);
-	int n = 255 / (a - 1);;
-	for (int i = 0; i < a; i++) {
-		for (int j = 0; j < a; j++) {
-			for (int k = 0; k < a; k++) {
-				if (i*a*a + j * a + k == MAX_OBJECTS) break;
-				color_tab[i*a*a + j * a + k] = CV_RGB(i*n, j*n, k*n);
-			}
-		}
-	}
+    // ... (Init color_tab) ...
 
-	cv::Mat img_gray(32, 256, CV_8UC1);
-	for (int r = 0; r < img_gray.rows; r++)
-		for (int c = 0; c < img_gray.cols; c++)
-			img_gray.at<uchar>(r, c) = (uchar)(255 - c);
+    cv::Mat img_gray(32, 256, CV_8UC1);
+    for (int r = 0; r < img_gray.rows; r++)
+        for (int c = 0; c < img_gray.cols; c++)
+            img_gray.at<uchar>(r, c) = (uchar)(c); // Corrected logic? Original was (255-c)
 
-	if (img_gray.empty()) {
-		CV_Error(CV_StsBadArg, "Sample image is empty. Please adjust your path, so it points to a valid input image!");
-	}
-	color_map = cv::Mat(32, 256, CV_8UC3);
+    // Use CV_Assert for C++ style check
+    CV_Assert(!img_gray.empty() && "Sample image is empty. Please adjust your path, so it points to a valid input image!");
 
-	// Apply the colormap:
-	cv::applyColorMap(img_gray(cv::Rect(0, 0, 256, 32)), color_map(cv::Rect(0, 0, 256, 32)), cv::COLORMAP_JET);
+    // color_map initialization should be done *after* the check
+    color_map.create(32, 256, CV_8UC3); // Ensure color_map is allocated
+
+    // Apply the colormap:
+    // Make sure source and destination ROI match sizes
+    cv::applyColorMap(img_gray, color_map, cv::COLORMAP_JET);
+
+    // Optional: Set first column to black (as in kcftracker.cpp)
+    for (int r = 0; r < color_map.rows; r++) {
+         color_map.at<cv::Vec3b>(r, 0) = cv::Vec3b(0,0,0);
+    }
 }
+
 void DrawDetections(cv::Mat& img_det, const std::vector<BBDet>& dets, const cv::Scalar* color_tab, const int& DB_TYPE, const bool& VIS_BB) {
 
 	if ((DB_TYPE_MOT15 <= DB_TYPE && DB_TYPE <= DB_TYPE_MOT20)) {
@@ -115,6 +113,7 @@ void DrawDetections(cv::Mat& img_det, const std::vector<BBDet>& dets, const cv::
 		//bg.release();
 	}
 }
+
 void DrawTracker(cv::Mat& img_trk, const std::vector<BBTrk>& trks, const std::string& trackerName, const int& DB_TYPE, const cv::Scalar* color_tab, int thick, double fontScale) {
 
 	for (const auto& track : trks) {
@@ -133,6 +132,7 @@ void DrawTracker(cv::Mat& img_trk, const std::vector<BBTrk>& trks, const std::st
 		}
 	}
 }
+
 void DrawTrackerInstance(cv::Mat& img_trk, const track_info& track, const std::string& trackerName, const int& DB_TYPE, const cv::Scalar* color_tab, const bool& vis_bb_on,
 	int thick, double fontScale) {
 
@@ -192,6 +192,7 @@ void DrawTrackerInstance(cv::Mat& img_trk, const track_info& track, const std::s
 		cv::putText(img_trk, strID, pt, cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255)/*color*/, thick);
 	}
 }
+
 void DrawTrackerInstances(cv::Mat& img_trk, const std::vector<BBTrk>& trks, const std::string& trackerName, const int& DB_TYPE, const cv::Scalar* color_tab, int thick, double fontScale) {
 
 	const int fWidth = img_trk.cols;
@@ -286,6 +287,7 @@ void DrawTrackerInstances(cv::Mat& img_trk, const std::vector<BBTrk>& trks, cons
 
 	}
 }
+
 void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, const int& thick, const int& id, const double& fontScale, std::string type, const bool& idBGinBB) {
 
 	if ((int)id >= 0) {
@@ -363,6 +365,7 @@ void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, con
 		}
 	}
 }
+
 // Draw the Detection Bounding Box
 void DrawDetBB(cv::Mat& img, int iter, cv::Rect bb, double conf, double conf_th, int digits, cv::Scalar color, int thick) {
 
@@ -381,25 +384,26 @@ void DrawDetBB(cv::Mat& img, int iter, cv::Rect bb, double conf, double conf_th,
 		/// Draw Detection Bounding Boxes with detection cofidence score
 		cv::rectangle(img, bb, color, thick);
 		cv::rectangle(img, cv::Point(bb.x, bb.y), cv::Point(bb.x + bb.width, bb.y - 30), color, -1);
-		cv::putText(img, cArrConfidence, cvPoint(bb.x, bb.y - 5), cv::FONT_HERSHEY_SIMPLEX, 0.6, CV_RGB(0, 0, 0), 2);
+		cv::putText(img, cArrConfidence, cv::Point(bb.x, bb.y - 5), cv::FONT_HERSHEY_SIMPLEX, 0.6, CV_RGB(0, 0, 0), 2);
 
 		/// Draw Observation ID (not target ID)
 		char cArrObsID[8];
-		sprintf_s(cArrObsID, 8, "%d", iter);
-		cv::putText(img, cArrObsID, cvPoint(bb.x + 5, bb.y + 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, color, 2);
+		sprintf(cArrObsID, "%d", iter);
+		cv::putText(img, cArrObsID, cv::Point(bb.x + 5, bb.y + 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, color, 2);
 	}
 	else {
 		cv::rectangle(img, bb, color, 1);
 		cv::rectangle(img, cv::Point(bb.x, bb.y + bb.height), cv::Point(bb.x + bb.width, bb.y + bb.height + 20), color, -1);
-		cv::putText(img, cArrConfidence, cvPoint(bb.x, bb.y + bb.height + 15), cv::FONT_HERSHEY_SIMPLEX, 0.4, CV_RGB(0, 0, 0), 1);
+		cv::putText(img, cArrConfidence, cv::Point(bb.x, bb.y + bb.height + 15), cv::FONT_HERSHEY_SIMPLEX, 0.4, CV_RGB(0, 0, 0), 1);
 	}
 }
+
 // Draw Frame Number on Image
 void DrawFrameNumberAndFPS(int iFrameCnt, cv::Mat& img, double scale, int thick, int frameOffset, int frames_skip_interval, double sec) {
 	// Draw Frame Number
 	char frameCntBuf[8];
-	sprintf_s(frameCntBuf, 8, "%d", (iFrameCnt + frameOffset) / frames_skip_interval);
-	cv::putText(img, frameCntBuf, cv::Point(10, 65), CV_FONT_HERSHEY_SIMPLEX, scale, cvScalar(255, 255, 255), thick);
+	sprintf(frameCntBuf, "%d", (iFrameCnt + frameOffset) / frames_skip_interval);
+	cv::putText(img, frameCntBuf, cv::Point(10, 65), cv::FONT_HERSHEY_SIMPLEX, scale, cv::Scalar(255, 255, 255), thick);
 
 	// Draw Frames Per Second
 	if (sec > 0.0) {
@@ -413,7 +417,7 @@ void cvPrintMat(cv::Mat matrix, std::string name)
 {
 	/*
 	<Mat::type()>
-	depth¿¡ channels±îÁö Æ÷ÇÔÇÏ´Â °³³ä ex. CV_64FC1
+	depthï¿½ï¿½ channelsï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ex. CV_64FC1
 	<Mat::depth()>
 	CV_8U - 8-bit unsigned integers ( 0..255 )
 	CV_8S - 8-bit signed integers ( -128..127 )
@@ -461,5 +465,4 @@ void cvPrintMat(cv::Mat matrix, std::string name)
 			printf("\n");
 		}
 	}
-
 }

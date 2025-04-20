@@ -36,26 +36,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include "OnlineTracker.h"
-#include <iostream>
-#include <algorithm>
+// #include <iostream>
+// #include <algorithm>
 #include <vector>
-#include <list>
-//#include <map>
 #include <unordered_map>
-#include <ppl.h>
-#include <numeric>
-#include <functional>
+// #include <list>
+// //#include <map>
+// #include <numeric>
+// #include <functional>
 
-#include <boost\format.hpp>
-#include <io.h> // for 	_access()
+// #include <boost/format.hpp>
 
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
-#include <opencv2\imgproc.hpp>
-// #include <opencv2\opencv.hpp>
+#include <opencv2/core.hpp>
+#include "local_types.hpp"
+// #include <opencv2/highgui.hpp>
+// #include <opencv2/imgproc.hpp>
+// // #include <opencv2/opencv.hpp>
 
-#include "drawing.hpp"
-// #include "io_mots.hpp" // 이걸 쓰는 순간 boost 와 충돌되는 라이브러리가 존재해 넘청난 에러를 발생시킨다.
+// #include "drawing.hpp"
+// // #include "io_mots.hpp" // boost.
 
 /**
 * @brief	A Class for the GMPHD_MAF tracker
@@ -74,7 +73,7 @@ public:
 	~GMPHD_MAF();
 
 	//* Multiple Object Tracking and Segmentation (MOTS) *//
-	int RunMOTS(const int& iFrmCnt, const cv::Mat& img, const vector<BBDet>& dets, vector<BBTrk>& out_tracks);	// 2D Instance Segmentation
+	int RunMOTS(const int& iFrmCnt, const cv::Mat& img, const std::vector<BBDet>& dets, std::vector<BBTrk>& out_tracks);	// 2D Instance Segmentation
 
 	void Destory();
 private:
@@ -101,24 +100,24 @@ private:
 	void InitializeMatrices(cv::Mat &F, cv::Mat &Q, cv::Mat &Ps, cv::Mat &R, cv::Mat &H, int MODEL_TYPE = sym::MODEL_VECTOR::XY);
 
 	// Segmentation Refinement
-	vector<BBDet> MergeDetInstances(vector<BBDet>& obss, const bool& IS_MOTS = false, const float& sOCC_TH = 0.1);
-	vector<BBTrk> MergeTrkInstances(vector<BBTrk>& stats, const float& sOCC_TH = 0.1);
+	std::vector<BBDet> MergeDetInstances(std::vector<BBDet>& obss, const bool& IS_MOTS = false, const float& sOCC_TH = 0.1);
+	std::vector<BBTrk> MergeTrkInstances(std::vector<BBTrk>& stats, const float& sOCC_TH = 0.1);
 
-	vector<int> BuildMergeGroupsMinID(const vector<BBTrk>& frmTracks, vector<vector<int>>& mergeIdxList);
-	vector<int> BuildMergeGroupsMaxConfID(const vector<BBDet>& frmDets, vector<vector<int>>& mergeIdxList);
-	void MergeSegMasksRects(const vector<cv::Mat>& in_masks, const vector<cv::Rect>& in_rects, cv::Mat& out_mask, cv::Rect& out_rect);
-	int FindGroupMinIDRecursive(const int& i, vector<bool>& visitTable, const vector<BBTrk>& frmTracks, const vector<vector<int>>& mergeIdxList, const int& cur_min_idx);
-	int FindGroupMaxConfIDRecursive(const int& i, vector<bool>& visitTable, const vector<BBDet>& frmDets, const vector<vector<int>>& mergeIdxList, const int& cur_min_idx);
+	std::vector<int> BuildMergeGroupsMinID(const std::vector<BBTrk>& frmTracks, std::vector<std::vector<int>>& mergeIdxList);
+	std::vector<int> BuildMergeGroupsMaxConfID(const std::vector<BBDet>& frmDets, std::vector<std::vector<int>>& mergeIdxList);
+	void MergeSegMasksRects(const std::vector<cv::Mat>& in_masks, const std::vector<cv::Rect>& in_rects, cv::Mat& out_mask, cv::Rect& out_rect);
+	int FindGroupMinIDRecursive(const int& i, std::vector<bool>& visitTable, const std::vector<BBTrk>& frmTracks, const std::vector<std::vector<int>>& mergeIdxList, const int& cur_min_idx);
+	int FindGroupMaxConfIDRecursive(const int& i, std::vector<bool>& visitTable, const std::vector<BBDet>& frmDets, const std::vector<std::vector<int>>& mergeIdxList, const int& cur_min_idx);
 
 	// Initialize states (tracks)
-	void InitTracks(const int& iFrmCnt, const cv::Mat& img, const vector<BBDet>& dets, const int& MODEL_TYPE);
+	void InitTracks(const int& iFrmCnt, const cv::Mat& img, const std::vector<BBDet>& dets, const int& MODEL_TYPE);
 
 	// Prediction of state_k|k-1 from state_k-1 (x,y,vel_x,vel_y,width, height) using Kalman filter
-	void PredictFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>& stats, const int MODEL_TYPE);
+	void PredictFrmWise(int iFrmCnt, const cv::Mat& img, std::vector<BBTrk>& stats, const int MODEL_TYPE);
 
 	// Methods for D2T (FrmWise) and T2T (TrkWise) Association (Hierarchical Data Association)
-	void DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>& stats, vector<BBDet>& obss, double P_survive = 0.99, const int &MODEL_TYPE = sym::MODEL_VECTOR::XY);
-	void DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats_lost, vector<BBTrk>& obss_live, const int &MODEL_TYPE = sym::MODEL_VECTOR::XY);
+	void DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, std::vector<BBTrk>& stats, std::vector<BBDet>& obss, double P_survive = 0.99, const int &MODEL_TYPE = sym::MODEL_VECTOR::XY);
+	void DataAssocTrkWise(int iFrmCnt, cv::Mat& img, std::vector<BBTrk>& stats_lost, std::vector<BBTrk>& obss_live, const int &MODEL_TYPE = sym::MODEL_VECTOR::XY);
 
 	// Affinity (Cost) Calculation
 	float FrameWiseAffinity(BBDet ob, BBTrk& stat_temp, const int MODEL_TYPE);
@@ -127,35 +126,35 @@ private:
 
 	// Score-level Fussion based Affinity Calcuation
 	void FusionMinMaxNorm(const int& nObs, const int& mStats,
-		vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs,
+		std::vector<std::vector<double>> &m_cost, std::vector<std::vector<double>>& gmphd_cost, std::vector<std::vector<double>>& kcf_cost, const std::vector<std::vector<float>>& IOUs,
 		const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON = false);
 
-	vector<double> FusionZScoreNorm(const int& nObs, const int& mStats,
-		vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs, double conf_interval,
+	std::vector<double> FusionZScoreNorm(const int& nObs, const int& mStats,
+		std::vector<std::vector<double>> &m_cost, std::vector<std::vector<double>>& gmphd_cost, std::vector<std::vector<double>>& kcf_cost, const std::vector<std::vector<float>>& IOUs, double conf_interval,
 		const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON = false);
 
 	void FusionDblSigmoidNorm(const int& nObs, const int& mStats,
-		vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs,
+		std::vector<std::vector<double>> &m_cost, std::vector<std::vector<double>>& gmphd_cost, std::vector<std::vector<double>>& kcf_cost, const std::vector<std::vector<float>>& IOUs,
 		const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON = false);
 
 	void FusionTanHNorm(const int& nObs, const int& mStats,
-		vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs,
+		std::vector<std::vector<double>> &m_cost, std::vector<std::vector<double>>& gmphd_cost, std::vector<std::vector<double>>& kcf_cost, const std::vector<std::vector<float>>& IOUs,
 		const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON = false);
 
 	void GetMeanStdDev(const int& nObs, const int& mStats, \
-		vector<vector<double>>&gmphd_cost, double &mean_gmphd, double& stddev_gmphd,
-		vector<vector<double>>&kcf_cost, double &mean_kcf, double& stddev_kcf);
+		std::vector<std::vector<double>>&gmphd_cost, double &mean_gmphd, double& stddev_gmphd,
+		std::vector<std::vector<double>>&kcf_cost, double &mean_kcf, double& stddev_kcf);
 
 	// Tracklets Managements (Categorization, state transition, memory deallocation..)
 	void ArrangeTargetsVecsBatchesLiveLost();
 	void PushTargetsVecs2BatchesLiveLost();
-	void ClassifyTrackletReliability(int iFrmCnt, unordered_map<int, vector<BBTrk>>& tracksbyID, unordered_map<int, vector<BBTrk>>& reliables, unordered_map<int, std::vector<BBTrk>>& unreliables);
-	void ClassifyReliableTracklets2LiveLost(int iFrmCnt, const unordered_map<int, vector<BBTrk>>& reliables, vector<BBTrk>& liveReliables, vector<BBTrk>& LostReliables, vector<BBTrk>& obss);
-	void ArrangeRevivedTracklets(unordered_map<int, vector<BBTrk>>& tracks, vector<BBTrk>& lives);
+	void ClassifyTrackletReliability(int iFrmCnt, std::unordered_map<int, std::vector<BBTrk>>& tracksbyID, std::unordered_map<int, std::vector<BBTrk>>& reliables, std::unordered_map<int, std::vector<BBTrk>>& unreliables);
+	void ClassifyReliableTracklets2LiveLost(int iFrmCnt, const std::unordered_map<int, std::vector<BBTrk>>& reliables, std::vector<BBTrk>& liveReliables, std::vector<BBTrk>& LostReliables, std::vector<BBTrk>& obss);
+	void ArrangeRevivedTracklets(std::unordered_map<int, vector<BBTrk>>& tracks, std::vector<BBTrk>& lives);
 
 	// Return the Tracking Results
 	/// Return live and reliable tracks
-	vector<BBTrk> GetTrackingResults(const int& iFrmCnt, vector<BBTrk>& liveReliables, const int& MODEL_TYPE);
+	std::vector<BBTrk> GetTrackingResults(const int& iFrmCnt, std::vector<BBTrk>& liveReliables, const int& MODEL_TYPE);
 
 private:
 	cv::Mat F_xy;		// transition matrix state_t-1 to state_t 	
