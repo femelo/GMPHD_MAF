@@ -304,17 +304,17 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 
 			// Drawing MOTS Results
 			if (PARALLEL_PROC_ON) {
-				DrawDetections(imgDet, (*detsSeq[0])[iFrmCnt], color_tab, DB_TYPE);
+				DrawDetections(imgDet, (*detsSeq[0])[iFrmCnt], MOTSParallel[TARGET_OBJ]->color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[0], "Car", DB_TYPE, color_tab, 3, 0.8);
-				DrawTrackerInstances(imgTrk_vis, out_trks[0], class_names[0], DB_TYPE, color_tab, 2, 0.7);
+				DrawTrackerInstances(imgTrk_vis, out_trks[0], class_names[0], DB_TYPE, MOTSParallel[TARGET_OBJ]->color_tab, 2, 0.7);
 
-				DrawDetections(imgDet, (*detsSeq[1])[iFrmCnt], color_tab, DB_TYPE);
+				DrawDetections(imgDet, (*detsSeq[1])[iFrmCnt], MOTSParallel[TARGET_OBJ]->color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[1], "Person", DB_TYPE, color_tab, 3, 0.8);
-				DrawTrackerInstances(imgTrk_vis, out_trks[1], class_names[1], DB_TYPE, color_tab, 2, 0.7);
+				DrawTrackerInstances(imgTrk_vis, out_trks[1], class_names[1], DB_TYPE, MOTSParallel[TARGET_OBJ]->color_tab, 2, 0.7);
 			} else {
-				DrawDetections(imgDet, (*detsSeq[TARGET_OBJ])[iFrmCnt], color_tab, DB_TYPE);
+				DrawDetections(imgDet, (*detsSeq[TARGET_OBJ])[iFrmCnt], MOTSParallel[TARGET_OBJ]->color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[TARGET_OBJ], class_names[TARGET_OBJ], DB_TYPE, color_tab, 3, 0.8);
-				DrawTrackerInstances(imgTrk_vis, out_trks[TARGET_OBJ], class_names[TARGET_OBJ], DB_TYPE, color_tab, 2, 0.7);
+				DrawTrackerInstances(imgTrk_vis, out_trks[TARGET_OBJ], class_names[TARGET_OBJ], DB_TYPE, MOTSParallel[TARGET_OBJ]->color_tab, 2, 0.7);
 			}
 
 			// Resizing 

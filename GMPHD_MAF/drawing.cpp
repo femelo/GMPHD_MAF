@@ -58,7 +58,7 @@ void InitColorMapTab(cv::Mat& color_map, cv::Scalar* color_tab)
 
     // Optional: Set first column to black (as in kcftracker.cpp)
     for (int r = 0; r < color_map.rows; r++) {
-         color_map.at<cv::Vec3b>(r, 0) = cv::Vec3b(0,0,0);
+         color_map.at<cv::Vec3b>(r, 0) = cv::Vec3b(0, 0, 0);
     }
 }
 

@@ -188,7 +188,8 @@ void OnlineTracker::InitColorTab()
 		for (int j = 0; j < a; j++) {
 			for (int k = 0; k < a; k++) {
 				int index = i * a * a + j * a + k;
-				if (index >= MAX_OBJECTS) break; // Use >= for safety
+				if (index >= MAX_OBJECTS)
+					break; // Use >= for safety
 
 				// CV_RGB(i*n, j*n, k*n) maps to cv::Scalar(blue, green, red)
 				// So, blue=k*n, green=j*n, red=i*n
