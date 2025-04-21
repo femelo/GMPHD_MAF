@@ -121,7 +121,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Parameters for Occlusion Group Management (Merge and Occlusion Group Energy Minimization)
 #define MERGE_DET_ON			1
 #define MERGE_TRACK_ON			1
-#define MERGE_METRIC_OPT		2	// 0: SIOA, 1:IOU, 2:sIOU
+#define MERGE_METRIC_OPT		2	// 0: SIOA, 1: IOU, 2: sIOU
 #define MERGE_THRESHOLD_RATIO	0.4f
 #define MERGE_METRIC_SIOA		0
 #define MERGE_METRIC_IOU		1
@@ -234,9 +234,9 @@ namespace sym {
 
 
 typedef struct MOTparams {
-	/*TARGET CLASS*/
+	/* TARGET CLASS */
 	int OBJ_TYPE = sym::OBJECT_TYPE::PEDESTRIAN;
-	/*PARAMS*/
+	/* PARAMS */
 	float DET_MIN_CONF = 0.0f; // upper bound
 	int TRACK_MIN_SIZE = 1;
 	int QUEUE_SIZE = 10;
@@ -247,11 +247,11 @@ typedef struct MOTparams {
 	float MERGE_RATIO_THRESHOLD = MERGE_THRESHOLD_RATIO;
 	int GROUP_QUEUE_SIZE = TRACK_MIN_SIZE * 10;
 	int FRAME_OFFSET = 0;
-	/*Gating */
+	/* Gating */
 	bool GATE_D2TA_ON = true;
 	bool GATE_T2TA_ON = true;
 
-	/*Simple Affinity Fusion*/
+	/* Simple Affinity Fusion */
 	/// 0: GMPHD (Position and Motion) only, 1: KCF (Appearance) Only, 2: Simple Affinity Fuion On
 	int SAF_D2TA_MODE = 2;
 	int SAF_T2TA_MODE = 2;
@@ -261,7 +261,7 @@ typedef struct MOTparams {
 	cv::Vec2f KCF_BOUNDS_T2TA;
 	cv::Vec2f IOU_BOUNDS_D2TA;
 	cv::Vec2f IOU_BOUNDS_T2TA;
-	/*Simple Affinity Fusion*/
+	/* Simple Affinity Fusion */
 
 	MOTparams() {};
 	MOTparams(

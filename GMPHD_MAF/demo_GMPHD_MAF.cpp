@@ -77,25 +77,25 @@ bool VIS_FRAME_BY_KEY = SKIP_FRAME_BY_FRAME;
 //		Tracker Name
 //		Sequence List(*.txt)
 
-// const int DB_TYPE = DB_TYPE_KITTI_MOTS;	// DB_TYPE_KITTI_MOTS, DB_TYPE_MOTS20
-const int DB_TYPE = DB_TYPE_MOTS20;
+const int DB_TYPE = DB_TYPE_KITTI_MOTS;	// DB_TYPE_KITTI_MOTS, DB_TYPE_MOTS20
+// const int DB_TYPE = DB_TYPE_MOTS20;
 const std::string MODE = "train";			// 'train', 'test'
-const std::string DETECTOR = "maskrcnn";		// 'maskrcnn'
-const std::string TRACKER = "GMPHD_MAF";		// Mask-Based Affinity Fusion
+const std::string DETECTOR = "maskrcnn";	// 'maskrcnn'
+const std::string TRACKER = "GMPHD_MAF";	// Mask-Based Affinity Fusion
 const std::string SEQ_TXT = "seq/" + sym::DB_NAMES[DB_TYPE] + "_" + MODE + ".txt" ;
 const std::string PARAMS_TXT = "params/"+ sym::DB_NAMES[DB_TYPE] + "_" + MODE + ".txt";
 
-const float DET_SCORE_TH_SCALE = 1.0;	// maskrcnn: 1.0
+const float DET_SCORE_TH_SCALE = 1.0;		// maskrcnn: 1.0
 const float DET_SCORE_ALPHA = 0.0;
 
-const bool PARALLEL_PROC_ON = true;
+const bool PARALLEL_PROC_ON = false;
 const int TARGET_OBJ = 0;	// 0: Car, 1: Person
  
 std::vector<std::string> trkTXTsGT;
 
-std::string class_names[2] = { "CARS", "PERSONS" };
+std::string class_names[2] = {"CARS", "PERSONS"};
 cv::Point2f avg_var_all[2];
-int all_occ[2] = { 0,0 };
+int all_occ[2] = {0, 0};
 
 VECx3xBBDet detectionsALL[2];
 VECx3xBBTrk tracksGT[2];
@@ -121,17 +121,17 @@ int main()
 		cv::Vec2i procObjs(0, 0);
 		int seq_num = 0;
 		int procFrames = 0;	float procSecs = 0.0; float procFPS = 10.0;
-		// std::string seq_name = "0000";
-		std::string seq_name = "MOTS20-02";
+		std::string seq_name = "0000";
+		// std::string seq_name = "MOTS20-02";
 		std::vector<std::string> seqNAMES = std::vector<std::string>(1, seq_name);
 
 		RunMOTSequence(
 			seq_num,
 			seq_name,
-			// "data/MOTS/KITTI_MOTS/training/image_02/" + seq_name,
-			// "data/MOTS/KITTI_MOTS/training/det_02/maskrcnn/" + seq_name + ".txt",
-			"data/MOTS/MOTS20/train/" + seq_name,
-			"data/MOTS/MOTS20/train/maskrcnn/" + seq_name + ".txt",
+			"data/MOTS/KITTI_MOTS/training/image_02/" + seq_name,
+			"data/MOTS/KITTI_MOTS/training/det_02/maskrcnn/" + seq_name + ".txt",
+			// "data/MOTS/MOTS20/train/" + seq_name,
+			// "data/MOTS/MOTS20/train/maskrcnn/" + seq_name + ".txt",
 			procObjs,
 			procFrames,
 			procSecs
@@ -189,7 +189,7 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 	std::vector<std::string> imgs = ReadFilesInPath(boost::filesystem::path(seqPath));
 	//std::cout << "[ "<< imgs.size() <<" images ]";
 
-	// Types: 2D Bounding Box, 3D Box, 3D Point Cloud, 2D Intance Segments 
+	// Types: 2D Bounding Box, 3D Box, 3D Point Cloud, 2D Instance Segments 
 	VECx2xBBDet *detsSeq[2]; // [0] Car, [1] Person, 
 	if (!DET_READ_FINs[sq]) {
 		std::cout << "		Reading the Detections of Seq: " << seqName << "....";
@@ -224,7 +224,7 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 	MOTSParallel[1]->SetSeqName(seqName);
 	MOTSParallel[1]->SetTotalFrames(nImages);
 
-	// Tracker Settings by using a parmeter file , e.g., KITTI_train.txt
+	// Tracker Settings by using a parameter file , e.g., KITTI_train.txt
 	if (params_in.size()) {
 		for (const auto& param : params_in) {
 			int obj_idx = param.OBJ_TYPE - 1;
@@ -278,7 +278,7 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 		cv::Mat imgTrk = img.clone();
 		
 		std::vector<BBTrk> out_trks[2];
-		int nProcDets[2] = { 0,0 };
+		int nProcDets[2] = {0, 0};
 
 		// Online Tracking (frame by frame process)
 		int64 t_start = cv::getTickCount();

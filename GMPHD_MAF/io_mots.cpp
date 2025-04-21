@@ -198,6 +198,7 @@ std::vector<std::string> ReadFilesInPath(boost::filesystem::path p) {
 			pathVec.push_back(current_file);
 		}
 	}
+	std::sort(pathVec.begin(), pathVec.end());
 	return pathVec;
 }
 
@@ -207,8 +208,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 
 	if (!boost::filesystem::exists(detTxt)) {
 		std::cout << "[ERROR] Detection file '" << detTxt << "' does not exist!\n" << std::endl;
-	}
-	else { // if (_access(detTxt.c_str(),0)==0) {
+	} else { // if (_access(detTxt.c_str(),0)==0) {
 			//std::cout << "[WORK] Detection file path have been loaded." << std::endl;
 
 		std::vector<std::string> detLines;
@@ -298,8 +298,7 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 				/*printf("[%d] %d(%d,%d,%d,%d,%.3f)(%d,%d)\n", iFrmCnt, detFrmCnt, det.rec.x, det.rec.y, det.rec.width, det.rec.height, det.confidence,
 					boost::lexical_cast<int>(vals.at(7)), boost::lexical_cast<int>(vals.at(8)));*/
 
-			}
-			else if (DB_TYPE_MOT15 <= DB_TYPE && DB_TYPE <= DB_TYPE_MOT20) {
+			} else if (DB_TYPE_MOT15 <= DB_TYPE && DB_TYPE <= DB_TYPE_MOT20) {
 				/// Tracking File Format in the MOT Benchmark (2D)
 				// token: ", "
 				// [frame (1~) id x y width height]
@@ -353,11 +352,9 @@ VECx2xBBDet ReadDetectionsSeq(const int& DB_TYPE, const std::string& detNAME, co
 
 			if (IS_VEHICLE_ALL(det.object_type)) {
 				detsFrmCar.push_back(det);
-			}
-			else if (IS_PERSON_EVAL(det.object_type)) {
+			} else if (IS_PERSON_EVAL(det.object_type)) {
 				detsFrmPerson.push_back(det);
-			}
-			else {
+			} else {
 				// MISC or DONTCARE
 			}
 		}
