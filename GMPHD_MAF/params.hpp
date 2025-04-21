@@ -57,33 +57,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Parameters for the GMPHD filter
 #define PI_8				3.14159265
-#define e_8				2.71828182
+#define e_8					2.71828182
 #define T_th				(0.0)
 #define W_th				(0.0)
 #define Q_TH_LOW_20			0.00000000000000000001f		// 0.1^20
-#define Q_TH_LOW_20_INVERSE		100000000000000000000.0f	// 10^20
-#define Q_TH_LOW_15			0.00000000000001f		// 0.1^15
-#define Q_TH_LOW_15_INVERSE		1000000000000000.0f		// 10^15
-#define Q_TH_LOW_10			0.0000000001f			// 0.1^10
-#define Q_TH_LOW_10_INVERSE		10000000000.0f			// 10^10
-#define Q_TH_LOW_8			0.00000001f			// 0.1^8
-#define Q_TH_LOW_8_INVERSE		100000000.0f			// 10^8
-#define P_SURVIVE_LOW			0.99				// object number >=2 : 0.99, else 0.95
-#define P_SURVIVE_MID			0.95
-#define VAR_X				25 //42.96 // 279.13 // 1116.520// 0.1 //25 // 171.87
-#define VAR_Y				100//29.27// 47.685 // 190.740 //0.1 //100 // 117.09
-#define VAR_D				25//0.1 //25
-#define VAR_R				0.09 // 0.1, 0.04, 0.01
-#define VAR_X_VEL			25// 42.96 // 279.13 // 1116.520// 0.1 //25 // 171.871
-#define VAR_Y_VEL			100// 29.27//47.685 // 190.740//0.1//100 // 117.090
-#define VAR_D_VEL			25//0.1 // 25	// 1, 4, 9, 16, 25, 100, 225, 400, 900
-#define VAR_R_VEL			100 // 0.1, 0.04, 0.01
+#define Q_TH_LOW_20_INVERSE	100000000000000000000.0f	// 10^20
+#define Q_TH_LOW_15			0.00000000000001f			// 0.1^15
+#define Q_TH_LOW_15_INVERSE	1000000000000000.0f			// 10^15
+#define Q_TH_LOW_10			0.0000000001f				// 0.1^10
+#define Q_TH_LOW_10_INVERSE	10000000000.0f				// 10^10
+#define Q_TH_LOW_8			0.00000001f					// 0.1^8
+#define Q_TH_LOW_8_INVERSE	100000000.0f				// 10^8
+#define P_SURVIVE_LOW		0.99						// object number >=2 : 0.99, else 0.95
+#define P_SURVIVE_MID		0.95
+#define VAR_X				25		// 42.96 // 279.13 // 1116.520// 0.1 //25 // 171.87
+#define VAR_Y				100		// 29.27// 47.685 // 190.740 //0.1 //100 // 117.09
+#define VAR_D				25		// 0.1 //25
+#define VAR_R				0.09 	// 0.1, 0.04, 0.01
+#define VAR_X_VEL			25		// 42.96 // 279.13 // 1116.520// 0.1 //25 // 171.871
+#define VAR_Y_VEL			100		// 29.27//47.685 // 190.740//0.1//100 // 117.090
+#define VAR_D_VEL			25		// 0.1 // 25	// 1, 4, 9, 16, 25, 100, 225, 400, 900
+#define VAR_R_VEL			100		// 0.1, 0.04, 0.01
 #define VAR_WIDTH			100
 #define VAR_HEIGHT			400
 #define VAR_X_MID			100
 #define VAR_Y_MID			400
-#define VAR_X_VEL_MID			100
-#define VAR_Y_VEL_MID			400
+#define VAR_X_VEL_MID		100
+#define VAR_Y_VEL_MID		400
 
 //#define VELOCITY_UPDATE_ALPHA	0.4f // moving camera scene with low fps ( <= 15)
 #define CONFIDENCE_UPDATE_ALPHA	0.95f
@@ -96,8 +96,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AFFINITY_COST_L1_OR_L2_NORM_TW		1	// 0: L1-norm, 1: L2-norm, tracklet-wise
 // SOT Tracker Options
 #define SOT_USE_KCF_TRACKER			1
-#define SOT_USE_SIAMRPN_TRACKER			2
-#define SOT_USE_DASIAMRPN_TRACKER		3
+#define SOT_USE_SIAMRPN_TRACKER		2
+#define SOT_USE_DASIAMRPN_TRACKER	3
 #define SOT_TRACK_OPT				SOT_USE_KCF_TRACKER
 
 // (D2TA) GMPHD-KCF Fusion (D2TA)
@@ -108,7 +108,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#define SAF_MASK_T2TA_ON			1
 
 // #define KCF_SOT_T2TA_ON			0
-//#define IOU_UPPER_TH_T2TA_ON			1
+// #define IOU_UPPER_TH_T2TA_ON		1
 
 // MOTS
 #define COV_UPDATE_T2TA				0
@@ -116,7 +116,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define USE_LINEAR_MOTION			0
 #define USE_KALMAN_MOTION			1
 #define T2TA_MOTION_OPT				USE_LINEAR_MOTION			
-#define KALMAN_INIT_BY_LINEAR			1
+#define KALMAN_INIT_BY_LINEAR		1
 
 // Parameters for Occlusion Group Management (Merge and Occlusion Group Energy Minimization)
 #define MERGE_DET_ON			1
@@ -138,10 +138,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Visualization Option (main function)
 #define VISUALIZATION_MAIN_ON		1
-#define SKIP_FRAME_BY_FRAME		0
+#define SKIP_FRAME_BY_FRAME			0
 #define VISUALIZATION_RESIZE_ON		0
-#define BOUNDING_BOX_THICK		5
-#define TRAJECTORY_THICK		5
+#define BOUNDING_BOX_THICK			5
+#define TRAJECTORY_THICK			5
 #define	ID_CONFIDENCE_FONT_SIZE		2
 #define	ID_CONFIDENCE_FONT_THICK	2
 #define FRAME_COUNT_FONT_SIZE		3
@@ -189,13 +189,15 @@ namespace sym {
 		CYCLIST, TRUCK, TRAM,
 		MISC, DONTCARE, BUS
 	};
-	static std::string OBJECT_STRINGS[10] = \
-	{ "Car", "Van",
-		"Pedestrian", "Person_sitting",
-		"Cyclist", "Truck", "Tram",
-		"Misc", "DontCare", "Bus" };
+	static std::string OBJECT_STRINGS[10] = {
+		"Car", "Van", "Pedestrian", "Person_sitting",
+		"Cyclist", "Truck", "Tram", "Misc", "DontCare", "Bus"
+	};
 
-	static std::string DB_NAMES[6] = {"MOT15", "MOT17", "MOT20", "KITTI", "KITTI_MOTS", "MOTS20"};
+	static std::string DB_NAMES[6] = {
+		"MOT15", "MOT17", "MOT20",
+		"KITTI", "KITTI_MOTS", "MOTS20"
+	};
 	static int FRAME_OFFSETS[6] = {1, 1, 1, 0, 0, 1};
 
 	static cv::Scalar OBJECT_TYPE_COLORS[9] = {
@@ -210,7 +212,7 @@ namespace sym {
 		cv::Scalar(0, 0, 0)
 	};	/*DontCare: Black*/
 
-	// Parameters: 11*10*7 = 770 cases * num of scenes * num of detectors * num of object classes, too many.
+	// Parameters: 11 * 10 * 7 = 770 cases * num of scenes * num of detectors * num of object classes, too many.
 	static float DET_SCORE_THS[15] = {-100.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98, 0.99, 1.0};
 	//static float DET_SCORE_THS[11] = {0.0, 0.52, 0.54, 0.55, 0.56, 0.58, 0.62, 0.64, 0.65, 0.66, 0.68};
 	static int TRACK_INIT_MIN[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
