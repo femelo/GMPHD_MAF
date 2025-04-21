@@ -192,7 +192,7 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 	// Types: 2D Bounding Box, 3D Box, 3D Point Cloud, 2D Intance Segments 
 	VECx2xBBDet *detsSeq[2]; // [0] Car, [1] Person, 
 	if (!DET_READ_FINs[sq]) {
-		std::cout << "		Reading the Detections of Seq:" << seqName << "....";
+		std::cout << "		Reading the Detections of Seq: " << seqName << "....";
 		VECx2xBBDet input_dets = ReadDetectionsSeq(DB_TYPE, DETECTOR, detTxt, detectionsALL[0][sq], detectionsALL[1][sq]);
 		std::cout << "[done]" << std::endl;
 		input_dets.clear();
