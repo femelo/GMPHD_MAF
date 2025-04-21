@@ -41,7 +41,7 @@ void InitColorMapTab(cv::Mat& color_map, cv::Scalar* color_tab)
 {
     // ... (Init color_tab) ...
 
-    cv::Mat img_gray(32, 256, CV_8UC1);
+    cv::Mat img_gray(32, 256, CV_8UC(1));
     for (int r = 0; r < img_gray.rows; r++)
         for (int c = 0; c < img_gray.cols; c++)
             img_gray.at<uchar>(r, c) = (uchar)(c); // Corrected logic? Original was (255-c)
@@ -50,7 +50,7 @@ void InitColorMapTab(cv::Mat& color_map, cv::Scalar* color_tab)
     CV_Assert(!img_gray.empty() && "Sample image is empty. Please adjust your path, so it points to a valid input image!");
 
     // color_map initialization should be done *after* the check
-    color_map.create(32, 256, CV_8UC3); // Ensure color_map is allocated
+    color_map.create(32, 256, CV_8UC(3)); // Ensure color_map is allocated
 
     // Apply the colormap:
     // Make sure source and destination ROI match sizes
@@ -76,7 +76,7 @@ void DrawDetections(cv::Mat& img_det, const std::vector<BBDet>& dets, const cv::
 		float alpha = 0.4;
 		float beta = 1.0 - alpha;
 
-		//cv::Mat bg(img_det.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+		//cv::Mat bg(img_det.size(), CV_8UC(3), cv::Scalar(255, 255, 255));
 		//cv::addWeighted(img_det, 0.5, bg, 0.5, 0.0, img_det);
 
 		int d = 0;
@@ -122,8 +122,10 @@ void DrawTracker(cv::Mat& img_trk, const std::vector<BBTrk>& trks, const std::st
 
 		cv::Rect rec = track.rec;
 		int objType = 0;
-		if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS)	objType = track.objType;
-		else															objType = sym::OBJECT_TYPE::PEDESTRIAN;
+		if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS)
+			objType = track.objType;
+		else
+			objType = sym::OBJECT_TYPE::PEDESTRIAN;
 
 		if (IS_VEHICLE_EVAL(objType) || IS_PERSON_EVAL(objType)) {
 			int idTmp = ((id < 0) ? 0 : id);
@@ -181,8 +183,10 @@ void DrawTrackerInstance(cv::Mat& img_trk, const track_info& track, const std::s
 		cv::rectangle(img_trk, track.bb, instClr, thick);
 	}
 	int idNChars = 0;
-	if (id == 0)	idNChars = 0;
-	else			idNChars = log10f(id);
+	if (id == 0)
+		idNChars = 0;
+	else
+		idNChars = log10f(id);
 
 	int idTextWidth = fontScale * (int)(idNChars + 4) * 20;
 	int idTextHeight = fontScale * 40;
@@ -274,8 +278,10 @@ void DrawTrackerInstances(cv::Mat& img_trk, const std::vector<BBTrk>& trks, cons
 		}
 
 		int idNChars = 0;
-		if (id == 0)	idNChars = 0;
-		else			idNChars = log10f(id);
+		if (id == 0)
+			idNChars = 0;
+		else
+			idNChars = log10f(id);
 
 		int idTextWidth = fontScale * (int)(idNChars + 4) * 20;
 		int idTextHeight = fontScale * 40;
@@ -292,12 +298,16 @@ void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, con
 
 	if ((int)id >= 0) {
 		std::string strID;
-		if (type.empty())	strID = std::to_string(id);
-		else				strID = type.substr(0, 1) + std::to_string(id); // type.substr(0, 2) + ":" + std::to_string(id);
+		if (type.empty())
+			strID = std::to_string(id);
+		else
+			strID = type.substr(0, 1) + std::to_string(id); // type.substr(0, 2) + ":" + std::to_string(id);
 
 		int idNChars = 0;
-		if (id == 0)	idNChars = 0;
-		else			idNChars = log10f(id);
+		if (id == 0)
+			idNChars = 0;
+		else
+			idNChars = log10f(id);
 
 		if (!type.compare("GT")) {
 			cv::rectangle(img, rec, cv::Scalar(255, 255, 255), thick + 2);
@@ -305,7 +315,7 @@ void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, con
 			int idTextWidth = fontScale * (int)(idNChars + 4) * 20;
 			int idTextHeight = fontScale * 40;
 
-			cv::Mat gt_mat = cv::Mat(rec.height, rec.width, CV_8UC3);
+			cv::Mat gt_mat = cv::Mat(rec.height, rec.width, CV_8UC(3));
 			gt_mat.setTo(color);
 
 			addWeighted(img(rec), 0.5, gt_mat, 0.5, 0.0, img(rec));
@@ -314,15 +324,13 @@ void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, con
 			cv::Point pt(rec.x + rec.width / 2.0 - idTextWidth / 2.0, rec.y + rec.height / 2.0 + idTextHeight / 2.0);
 			cv::putText(img, strID, pt, cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255)/*color*/, thick);
 
-		}
-		else if (!type.compare("DC")) { // don't care
-			cv::Mat gt_mat = cv::Mat(rec.height, rec.width, CV_8UC3);
+		} else if (!type.compare("DC")) { // don't care
+			cv::Mat gt_mat = cv::Mat(rec.height, rec.width, CV_8UC(3));
 			gt_mat.setTo(color);
 
 			addWeighted(img(rec), 0.5, gt_mat, 0.5, 0.0, img(rec));
 			gt_mat.release();
-		}
-		else {
+		} else {
 			cv::rectangle(img, rec, color, thick);
 
 			int bgRecWidth = fontScale * (int)(idNChars + 3) * 20;
@@ -335,18 +343,15 @@ void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, con
 				if ((rec.y + rec.height / 2.0) < (img.rows / 2)) { // y < height/2 (higher)
 					pt.y = rec.y + rec.height + bgRecHeight - margin;// should be located on the bottom of the bouding box
 					bg = cv::Rect(pt.x - margin, pt.y - bgRecHeight + margin, bgRecWidth, bgRecHeight);
-				}
-				else { // y >= height/2 (lower)
+				} else { // y >= height/2 (lower)
 					pt.y = rec.y - margin;	// should be located on the top of the bouding box
 					bg = cv::Rect(pt.x - margin, pt.y - bgRecHeight + margin, bgRecWidth, bgRecHeight);
 				}
-			}
-			else {
+			} else {
 				if ((rec.y + rec.height / 2.0) < (img.rows / 2)) { // y < height/2 (higher)
 					pt.y = rec.y + rec.height - margin;// should be located on the bottom of the bouding box
 					bg = cv::Rect(pt.x - margin, pt.y - bgRecHeight + margin, bgRecWidth, bgRecHeight);
-				}
-				else { // y >= height/2 (lower)
+				} else { // y >= height/2 (lower)
 					pt.y = rec.y + bgRecHeight - margin;	// should be located on the top of the bouding box
 					bg = cv::Rect(pt.x - margin, pt.y - bgRecHeight + margin, bgRecWidth, bgRecHeight);
 				}
@@ -355,12 +360,10 @@ void DrawTrackBB(cv::Mat& img, const cv::Rect& rec, const cv::Scalar& color, con
 			cv::putText(img, strID, pt, cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(0, 255, 255)/*color*/, thick);
 
 		}
-	}
-	else { // object class: dontcare
+	} else { // object class: dontcare
 		if (!type.compare("GT")) {
 			cv::rectangle(img, rec, cv::Scalar(0, 0, 0), -1);
-		}
-		else {
+		} else {
 			cv::rectangle(img, rec, cv::Scalar(0, 0, 0), -1);
 		}
 	}
@@ -377,7 +380,8 @@ void DrawDetBB(cv::Mat& img, int iter, cv::Rect bb, double conf, double conf_th,
 	std::string str = ost.str();
 	char cArrConfidence[8];
 	int c;
-	for (c = 0; c < digits && c < str.size(); c++) cArrConfidence[c] = str.c_str()[c];
+	for (c = 0; c < digits && c < str.size(); c++)
+		cArrConfidence[c] = str.c_str()[c];
 	cArrConfidence[c] = '\0';
 
 	if (conf >= conf_th) {
@@ -390,8 +394,7 @@ void DrawDetBB(cv::Mat& img, int iter, cv::Rect bb, double conf, double conf_th,
 		char cArrObsID[8];
 		sprintf(cArrObsID, "%d", iter);
 		cv::putText(img, cArrObsID, cv::Point(bb.x + 5, bb.y + 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, color, 2);
-	}
-	else {
+	} else {
 		cv::rectangle(img, bb, color, 1);
 		cv::rectangle(img, cv::Point(bb.x, bb.y + bb.height), cv::Point(bb.x + bb.width, bb.y + bb.height + 20), color, -1);
 		cv::putText(img, cArrConfidence, cv::Point(bb.x, bb.y + bb.height + 15), cv::FONT_HERSHEY_SIMPLEX, 0.4, CV_RGB(0, 0, 0), 1);

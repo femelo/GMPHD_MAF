@@ -77,7 +77,8 @@ bool VIS_FRAME_BY_KEY = SKIP_FRAME_BY_FRAME;
 //		Tracker Name
 //		Sequence List(*.txt)
 
-const int DB_TYPE = DB_TYPE_KITTI_MOTS;	// DB_TYPE_KITTI_MOTS, DB_TYPE_MOTS20
+// const int DB_TYPE = DB_TYPE_KITTI_MOTS;	// DB_TYPE_KITTI_MOTS, DB_TYPE_MOTS20
+const int DB_TYPE = DB_TYPE_MOTS20;
 const std::string MODE = "train";			// 'train', 'test'
 const std::string DETECTOR = "maskrcnn";		// 'maskrcnn'
 const std::string TRACKER = "GMPHD_MAF";		// Mask-Based Affinity Fusion
@@ -112,7 +113,7 @@ int main()
 
 	// [1] Run MOTS with a Single Scene in a Direct Path
 	char m = m_buffer.back();
-	if (m =='1') {
+	if (m == '1') {
 		DET_READ_FINs.push_back(false);
 		detectionsALL[0].resize(1, VECx2xBBDet());
 		detectionsALL[1].resize(1, VECx2xBBDet());
@@ -120,21 +121,26 @@ int main()
 		cv::Vec2i procObjs(0, 0);
 		int seq_num = 0;
 		int procFrames = 0;	float procSecs = 0.0; float procFPS = 10.0;
-		std::string seq_name = "0000";
+		// std::string seq_name = "0000";
+		std::string seq_name = "MOTS20-02";
 		std::vector<std::string> seqNAMES = std::vector<std::string>(1, seq_name);
 
-		RunMOTSequence(seq_num,
+		RunMOTSequence(
+			seq_num,
 			seq_name,
-			"data/MOTS/KITTI_MOTS/training/image_02/" + seq_name,
-			"data/MOTS/KITTI_MOTS/training/det_02/maskrcnn/" + seq_name + ".txt",
-			procObjs, procFrames, procSecs);
+			// "data/MOTS/KITTI_MOTS/training/image_02/" + seq_name,
+			// "data/MOTS/KITTI_MOTS/training/det_02/maskrcnn/" + seq_name + ".txt",
+			"data/MOTS/MOTS20/train/" + seq_name,
+			"data/MOTS/MOTS20/train/maskrcnn/" + seq_name + ".txt",
+			procObjs,
+			procFrames,
+			procSecs
+		);
 
 		WriteFPSTxt(MODE, DETECTOR, seqNAMES, procFrames, procSecs, procFPS);
 		printf("[Total] %d frames / %.3f secs = (%.3f FPS)\n", procFrames, procSecs, procFPS);
 		printf("-------------------------------------------------------\n");
-	}
-	// [2]	Run MOTS with a Set of Scenes in Dataset Dirs
-	else if(m == '2') {
+	} else if (m == '2') { // [2]	Run MOTS with a Set of Scenes in Dataset Dirs
 		
 		std::vector<std::string> seqNAMEs, seqPATHs;
 		std::vector<std::string> detTXTs, trkTXTs;
@@ -151,6 +157,7 @@ int main()
 	}
 	return 0;
 }
+
 void RunMOTDataset(const std::vector<std::string>& seqNAMEs, const std::vector<std::string>& seqPATHs, const std::vector<std::string>& detTXTs, const std::vector<MOTparams>& params_in) {
 
 	int totalProcFrames = 0;  float totalProcSecs = 1.0;  float totalProcFPS = 10.0;
@@ -174,6 +181,7 @@ void RunMOTDataset(const std::vector<std::string>& seqNAMEs, const std::vector<s
 	printf("[Total] %d frames / %.3f secs = (%.3f FPS)\n", totalProcFrames, totalProcSecs, totalProcFPS);
 	printf("-------------------------------------------------------\n");
 }
+
 void RunMOTSequence(const int& sq, const std::string& seqName, const std::string& seqPath, const std::string& detTxt, 
 	cv::Vec2i& procObjs, int &procFrames, float &procSecs, const std::vector<MOTparams>& params_in) {
 
@@ -222,9 +230,8 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 			int obj_idx = param.OBJ_TYPE - 1;
 			MOTSParallel[obj_idx]->SetParams(param);
 		}
-	}
-	// Default Tracker Settings
-	else {
+	} else {
+		// Default Tracker Settings
 		printf("Default parameters are set.\n");
 		MOTSParallel[0]->SetParams(MOTparams(sym::OBJECT_TYPE::CAR,
 			0.6, \
@@ -283,8 +290,7 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 				sumValidObjs[p] += nProcDets[p];
 				imgTrkProc.release();
 			}
-		}
-		else {
+		} else {
 			nProcDets[TARGET_OBJ] = MOTSParallel[TARGET_OBJ]->RunMOTS(iFrmCnt, imgTrk, (*detsSeq[TARGET_OBJ])[iFrmCnt], out_trks[TARGET_OBJ]);
 			sumValidObjs[TARGET_OBJ] += nProcDets[TARGET_OBJ];
 		}
@@ -305,8 +311,7 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 				DrawDetections(imgDet, (*detsSeq[1])[iFrmCnt], color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[1], "Person", DB_TYPE, color_tab, 3, 0.8);
 				DrawTrackerInstances(imgTrk_vis, out_trks[1], class_names[1], DB_TYPE, color_tab, 2, 0.7);
-			}
-			else {
+			} else {
 				DrawDetections(imgDet, (*detsSeq[TARGET_OBJ])[iFrmCnt], color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[TARGET_OBJ], class_names[TARGET_OBJ], DB_TYPE, color_tab, 3, 0.8);
 				DrawTrackerInstances(imgTrk_vis, out_trks[TARGET_OBJ], class_names[TARGET_OBJ], DB_TYPE, color_tab, 2, 0.7);
@@ -384,13 +389,13 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 	if (PARALLEL_PROC_ON) {
 		WriteMOTResults(MODE, imgs, seqName, sq, DETECTOR, MOTSParallel[0], MOTSParallel[1]);
 		MOTSParallel[0]->Destroy();
-	}
-	else {
+	} else {
 		WriteMOTResults(MODE, imgs, seqName, sq, DETECTOR, MOTSParallel[TARGET_OBJ]);
 	}
 	MOTSParallel[TARGET_OBJ]->Destroy();
 
 }
+
 void WriteFPSTxt(const std::string& train_or_test, const std::string& detName, const std::vector<std::string>& seqNAMES,
 	int& totalProcFrames, float& totalProcSecs, float& totalProcFPS,
 	const std::vector<int>& frames, const std::vector<float>& secs) {
@@ -400,8 +405,7 @@ void WriteFPSTxt(const std::string& train_or_test, const std::string& detName, c
 	if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS) {
 		sprintf(filePath, "res/KITTI_MOTS/%s/_speed_%s.txt", train_or_test.c_str(), detName.c_str());
 		//sprintf(filePathINTP, 256, "res/KITTI/%s/%s/%s_intp/_speed.txt", train_or_test, detName, strThDetConf);
-	}
-	else if (DB_TYPE == DB_TYPE_MOTS20) {
+	} else if (DB_TYPE == DB_TYPE_MOTS20) {
 		sprintf(filePath, "res/MOTS20/%s/_speed_%s.txt", train_or_test.c_str(), detName.c_str());
 		//sprintf(filePathINTP, 256, "res/MOTS20/%s/%s/%s_intp/_speed.txt", train_or_test, detName, strThDetConf);
 	}
@@ -435,6 +439,7 @@ void WriteFPSTxt(const std::string& train_or_test, const std::string& detName, c
 	fclose(fp);
 	//fclose(fp_intp);
 }
+
 // The Function for Writing the Tracking Results into a Text File
 void WriteMOTResults(const std::string& train_or_test, const std::vector<std::string>& imgPaths, const std::string& seqName, const int& seqNum, const std::string& detName, boost::shared_ptr<OnlineTracker> tracker) {
 
@@ -442,8 +447,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 
 	if (DB_TYPE == DB_TYPE_KITTI || DB_TYPE == DB_TYPE_KITTI_MOTS) {
 		sprintf(filePath, "res/KITTI_MOTS/%s/%s.txt", train_or_test.c_str(), seqName.c_str());
-	}
-	else if (DB_TYPE == DB_TYPE_MOTS20) {
+	} else if (DB_TYPE == DB_TYPE_MOTS20) {
 		sprintf(filePath, "res/MOTS20/%s/%s.txt", train_or_test.c_str(), seqName.c_str());
 	}
 
@@ -505,8 +509,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 						(float)tracker->allLiveReliables[i][tr].rec.x, (float)tracker->allLiveReliables[i][tr].rec.y, \
 						(float)(tracker->allLiveReliables[i][tr].rec.width), \
 						(float)(tracker->allLiveReliables[i][tr].rec.height));
-				}
-				else if (DB_TYPE == DB_TYPE_KITTI) {
+				} else if (DB_TYPE == DB_TYPE_KITTI) {
 					/// Detection File Format in the KITTI Benchmark
 					// token: " "
 
@@ -526,8 +529,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 						(float)bbox.x, (float)bbox.y, (float)(bbox.x + bbox.width), (float)(bbox.y + bbox.height), \
 						tracker->allLiveReliables[i][tr].conf);
 
-				}
-				else if (DB_TYPE == DB_TYPE_KITTI_MOTS || DB_TYPE == DB_TYPE_MOTS20) {
+				} else if (DB_TYPE == DB_TYPE_KITTI_MOTS || DB_TYPE == DB_TYPE_MOTS20) {
 
 					int id = tracker->allLiveReliables[i][tr].id;
 					int objTypeMOTS = (tracker->GetObjType() == sym::OBJECT_TYPE::CAR) ? 1 : 2;
@@ -553,6 +555,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 
 	fclose(fp);
 }
+
 // The Function for Writing the Tracking Results into a Text File
 void WriteMOTResults(const std::string& train_or_test, const std::vector<std::string>& imgPaths, const std::string& seqName, const int& seqNum,
 	const std::string& detName, boost::shared_ptr<OnlineTracker> carTracker, boost::shared_ptr<OnlineTracker> personTracker) {
@@ -743,8 +746,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 						(float)personTracker->allLiveReliables[i][tr].rec.x, (float)personTracker->allLiveReliables[i][tr].rec.y, \
 						(float)(personTracker->allLiveReliables[i][tr].rec.width), \
 						(float)(personTracker->allLiveReliables[i][tr].rec.height));
-				}
-				else if (DB_TYPE == DB_TYPE_KITTI) {
+				} else if (DB_TYPE == DB_TYPE_KITTI) {
 					/// Detection File Format in the KITTI Benchmark
 					// token: " "
 
@@ -764,8 +766,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 						(float)bbox.x, (float)bbox.y, (float)(bbox.x + bbox.width), (float)(bbox.y + bbox.height), \
 						personTracker->allLiveReliables[i][tr].conf);
 
-				}
-				else if (DB_TYPE == DB_TYPE_KITTI_MOTS || DB_TYPE == DB_TYPE_MOTS20) {
+				} else if (DB_TYPE == DB_TYPE_KITTI_MOTS || DB_TYPE == DB_TYPE_MOTS20) {
 
 					int id = personTracker->allLiveReliables[i][tr].id;
 					int objTypeMOTS = (personTracker->GetObjType() == sym::OBJECT_TYPE::CAR) ? 1 : 2;
