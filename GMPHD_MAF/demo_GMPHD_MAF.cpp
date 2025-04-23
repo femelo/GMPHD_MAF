@@ -88,7 +88,7 @@ const std::string PARAMS_TXT = "params/"+ sym::DB_NAMES[DB_TYPE] + "_" + MODE + 
 const float DET_SCORE_TH_SCALE = 1.0;		// maskrcnn: 1.0
 const float DET_SCORE_ALPHA = 0.0;
 
-const bool PARALLEL_PROC_ON = false;
+const bool PARALLEL_PROC_ON = true;
 const int TARGET_OBJ = 0;	// 0: Car, 1: Person
  
 std::vector<std::string> trkTXTsGT;
@@ -264,7 +264,7 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 			cv::Vec2b(false, false)));/*GATE_ON, MOTS20: true, true, KITTI-MOTS: false, false*/
 	}
 	
-	int sumValidObjs[2] = { 0,0 };
+	int sumValidObjs[2] = {0, 0};
 
 	// Run Tracking Process (MOTS)
 	int iFrmCnt = 0;
@@ -304,13 +304,13 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 
 			// Drawing MOTS Results
 			if (PARALLEL_PROC_ON) {
-				DrawDetections(imgDet, (*detsSeq[0])[iFrmCnt], MOTSParallel[TARGET_OBJ]->color_tab, DB_TYPE);
+				DrawDetections(imgDet, (*detsSeq[0])[iFrmCnt], MOTSParallel[0]->color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[0], "Car", DB_TYPE, color_tab, 3, 0.8);
-				DrawTrackerInstances(imgTrk_vis, out_trks[0], class_names[0], DB_TYPE, MOTSParallel[TARGET_OBJ]->color_tab, 2, 0.7);
+				DrawTrackerInstances(imgTrk_vis, out_trks[0], class_names[0], DB_TYPE, MOTSParallel[0]->color_tab, 2, 0.7);
 
-				DrawDetections(imgDet, (*detsSeq[1])[iFrmCnt], MOTSParallel[TARGET_OBJ]->color_tab, DB_TYPE);
+				DrawDetections(imgDet, (*detsSeq[1])[iFrmCnt], MOTSParallel[1]->color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[1], "Person", DB_TYPE, color_tab, 3, 0.8);
-				DrawTrackerInstances(imgTrk_vis, out_trks[1], class_names[1], DB_TYPE, MOTSParallel[TARGET_OBJ]->color_tab, 2, 0.7);
+				DrawTrackerInstances(imgTrk_vis, out_trks[1], class_names[1], DB_TYPE, MOTSParallel[1]->color_tab, 2, 0.7);
 			} else {
 				DrawDetections(imgDet, (*detsSeq[TARGET_OBJ])[iFrmCnt], MOTSParallel[TARGET_OBJ]->color_tab, DB_TYPE);
 				//DrawTracker(imgTrk_vis, out_trks[TARGET_OBJ], class_names[TARGET_OBJ], DB_TYPE, color_tab, 3, 0.8);
@@ -389,11 +389,11 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 	if (PARALLEL_PROC_ON) {
 		WriteMOTResults(MODE, imgs, seqName, sq, DETECTOR, MOTSParallel[0], MOTSParallel[1]);
 		MOTSParallel[0]->Destroy();
+		MOTSParallel[1]->Destroy();
 	} else {
 		WriteMOTResults(MODE, imgs, seqName, sq, DETECTOR, MOTSParallel[TARGET_OBJ]);
+		MOTSParallel[TARGET_OBJ]->Destroy();
 	}
-	MOTSParallel[TARGET_OBJ]->Destroy();
-
 }
 
 void WriteFPSTxt(const std::string& train_or_test, const std::string& detName, const std::vector<std::string>& seqNAMES,

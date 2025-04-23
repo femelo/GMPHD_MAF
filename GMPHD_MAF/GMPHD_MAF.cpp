@@ -56,10 +56,8 @@ GMPHD_MAF::GMPHD_MAF()
 	this->InitializeMatrices(F_xy, Q_xy, Ps_xy, R_xy, H_xy, sym::MODEL_VECTOR::XY);
 }
 
+GMPHD_MAF::~GMPHD_MAF() {}
 
-GMPHD_MAF::~GMPHD_MAF()
-{
-}
 void GMPHD_MAF::Destroy() {
 
 	for (auto& ftr : this->allLiveReliables) {
@@ -78,6 +76,7 @@ void GMPHD_MAF::Destroy() {
 	}
 	this->tracksbyID.clear();
 }
+
 /**
 *	@brief
 *	@details
@@ -106,8 +105,10 @@ int GMPHD_MAF::RunMOTS(const int& iFrmCnt, const cv::Mat& img, const vector<BBDe
 		if (in_det.confidence >= this->params.DET_MIN_CONF /*&& bbd.rec.height < this->frmHeight/2.0 */) {
 
 			float confidence;
-			if (in_det.confidence < 0.0)	confidence = 0.001; // 1.0 / nDets;
-			else							confidence = in_det.confidence;
+			if (in_det.confidence < 0.0)
+				confidence = 0.001; // 1.0 / nDets;
+			else
+				confidence = in_det.confidence;
 
 			BBDet det = in_det;
 			det.fn = iFrmCnt;
@@ -122,9 +123,9 @@ int GMPHD_MAF::RunMOTS(const int& iFrmCnt, const cv::Mat& img, const vector<BBDe
 	}
 
 	if (MERGE_DET_ON) { // ���ϴ°� ���� ��¥�� track level ���� �ϴµ�
-		std::vector<BBDet> mereged_dets = this->MergeDetInstances(detVec, true);
+		std::vector<BBDet> merged_dets = this->MergeDetInstances(detVec, true);
 		detVec.clear();
-		detVec = mereged_dets;
+		detVec = merged_dets;
 	}
 	int nProcDets = detVec.size();
 	// Normalize the Weights (Detection Scores)
@@ -141,13 +142,11 @@ int GMPHD_MAF::RunMOTS(const int& iFrmCnt, const cv::Mat& img, const vector<BBDe
 		// Empty Check Again
 		if (this->liveTrkVec.size() == 0) {
 			this->InitTracks(iFrmCnt, img, detVec, MODEL_TYPE);
-		}
-		else {
+		} else {
 			// Data Association -> Update -> Pruning -> Merge
 			this->DataAssocFrmWise(iFrmCnt, img, this->liveTrkVec, detVec, this->P_survive, MODEL_TYPE);
 		}
-	}
-	else if (/*this->sysFrmCnt == 0 || */this->liveTrkVec.size() == 0) {
+	} else if (/*this->sysFrmCnt == 0 || */this->liveTrkVec.size() == 0) {
 		// Init
 		this->InitTracks(iFrmCnt, img, detVec, MODEL_TYPE);
 	}
@@ -219,13 +218,16 @@ int GMPHD_MAF::RunMOTS(const int& iFrmCnt, const cv::Mat& img, const vector<BBDe
 
 	return nProcDets;
 }
+
 void GMPHD_MAF::InitTracks(const int& iFrmCnt, const cv::Mat& img, const vector<BBDet>& dets, const int& MODEL_TYPE) {
 	std::vector<BBDet>::const_iterator iterD;
 	for (iterD = dets.begin(); iterD != dets.end(); ++iterD)
 	{
 		int id = this->usedIDcnt++;
-		if (IS_VEHICLE_ALL(this->trackObjType))		id = 2 * id + 1;
-		else if (IS_PERSON_EVAL(this->trackObjType))	id = 2 * id;
+		if (IS_VEHICLE_ALL(this->trackObjType))
+			id = 2 * id + 1;
+		else if (IS_PERSON_EVAL(this->trackObjType))
+			id = 2 * id;
 
 		BBTrk bbt;
 		bbt.isAlive = true;
@@ -274,6 +276,7 @@ void GMPHD_MAF::InitTracks(const int& iFrmCnt, const cv::Mat& img, const vector<
 		this->liveTrkVec.push_back(bbt);
 	}
 }
+
 void GMPHD_MAF::PredictFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>& stats, const int MODEL_TYPE)
 {
 
@@ -321,6 +324,7 @@ void GMPHD_MAF::PredictFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>& s
 		}	
 	}
 }
+
 void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>& stats, vector<BBDet>& obss, double P_survive, const int &MODEL_TYPE) {
 
 	//FILE* fp_s2ta_affs[2] ;
@@ -920,6 +924,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 	delete[]isAssignedObs;
 	delete[]isAssignedObsIDs;
 }
+
 float GMPHD_MAF::FrameWiseAffinity(BBDet ob, BBTrk &stat_temp, const int MODEL_TYPE) {
 
 	const int dims_obs = sym::DIMS_OBS[MODEL_TYPE];
@@ -983,6 +988,7 @@ float GMPHD_MAF::FrameWiseAffinity(BBDet ob, BBTrk &stat_temp, const int MODEL_T
 	if (q_value < FLT_MIN) q_value = 0.0;
 	return q_value;
 }
+
 float GMPHD_MAF::TrackletWiseAffinity(BBTrk &stat_pred, const BBTrk& obs, const int MODEL_TYPE) {
 
 	const int dims_obs = sym::DIMS_OBS[MODEL_TYPE];
@@ -1044,6 +1050,7 @@ float GMPHD_MAF::TrackletWiseAffinity(BBTrk &stat_pred, const BBTrk& obs, const 
 	if (q_value < FLT_MIN) q_value = 0.0;
 	return q_value;
 }
+
 float GMPHD_MAF::TrackletWiseAffinityKF(BBTrk &stat_pred, const BBTrk& obs, const int MODEL_TYPE) {
 
 	const int dims_obs = sym::DIMS_OBS[MODEL_TYPE];
@@ -1087,6 +1094,7 @@ float GMPHD_MAF::TrackletWiseAffinityKF(BBTrk &stat_pred, const BBTrk& obs, cons
 	if (q_value < FLT_MIN) q_value = 0.0;
 	return q_value;
 }
+
 void GMPHD_MAF::FusionMinMaxNorm(const int& nObs, const int& mStats, vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs,
 	const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON) {
 	double min_gmphd_cost = FLT_MAX;
@@ -1197,6 +1205,7 @@ void GMPHD_MAF::FusionMinMaxNorm(const int& nObs, const int& mStats, vector<vect
 		}
 	}
 }
+
 vector<double> GMPHD_MAF::FusionZScoreNorm(const int& nObs, const int& mStats,
 	vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs, double conf_interval,
 	const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON) {
@@ -1300,11 +1309,13 @@ vector<double> GMPHD_MAF::FusionZScoreNorm(const int& nObs, const int& mStats,
 
 	return gmphd_kcf_mean_sdtddev;
 }
+
 void GMPHD_MAF::FusionDblSigmoidNorm(const int& nObs, const int& mStats,
 	vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs,
 	const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON) {
 
 }
+
 void GMPHD_MAF::FusionTanHNorm(const int& nObs, const int& mStats,
 	vector<vector<double>> &m_cost, vector<vector<double>>& gmphd_cost, vector<vector<double>>& kcf_cost, const vector<vector<float>>& IOUs,
 	const float& CONF_LOWER_THRESH, const float& CONF_UPPER_THRESH, const float& IOU_LOWER_THRESH, const float& IOU_UPPER_THRESH, const bool& T2TA_ON) {
@@ -1388,6 +1399,7 @@ void GMPHD_MAF::FusionTanHNorm(const int& nObs, const int& mStats,
 		}
 	}
 }
+
 void GMPHD_MAF::GetMeanStdDev(const int& nObs, const int& mStats,
 	vector<vector<double>>&gmphd_cost, double &mean_gmphd, double& stddev_gmphd, vector<vector<double>>&kcf_cost, double &mean_kcf, double& stddev_kcf) {
 	double m_kcf_cost = 0.0;
@@ -1419,6 +1431,7 @@ void GMPHD_MAF::GetMeanStdDev(const int& nObs, const int& mStats,
 	if (stddev_gmphd == 0.0) stddev_gmphd = 1.0;
 	if (stddev_kcf == 0.0) stddev_kcf = 1.0;
 }
+
 void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats_lost, vector<BBTrk>& obss_live, const int &MODEL_TYPE) {
 	//FILE* fp_t2ta_affs[2];
 	//string dirHome = "res\\KITTI\\train\\";
@@ -1988,6 +2001,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 	delete[]isAssignedObs;
 	delete[]isAssignedStats;
 }
+
 void GMPHD_MAF::ArrangeTargetsVecsBatchesLiveLost() {
 	vector<BBTrk> liveTargets;
 	vector<BBTrk> lostTargets;
@@ -2008,6 +2022,7 @@ void GMPHD_MAF::ArrangeTargetsVecsBatchesLiveLost() {
 	liveTargets.clear();
 	lostTargets.clear();
 }
+
 void GMPHD_MAF::PushTargetsVecs2BatchesLiveLost() {
 	if (this->sysFrmCnt >= this->params.TRACK_MIN_SIZE) {
 		for (int q = 0; q < this->params.FRAMES_DELAY_SIZE; q++) {
@@ -2027,6 +2042,7 @@ void GMPHD_MAF::PushTargetsVecs2BatchesLiveLost() {
 		this->lostTracksBatch[this->sysFrmCnt] = this->lostTrkVec;
 	}
 }
+
 void GMPHD_MAF::ClassifyTrackletReliability(int iFrmCnt, unordered_map<int, vector<BBTrk>>& tracksbyID,
 	unordered_map<int, vector<BBTrk>>& reliables, unordered_map<int, std::vector<BBTrk>>& unreliables) {
 
@@ -2067,6 +2083,7 @@ void GMPHD_MAF::ClassifyTrackletReliability(int iFrmCnt, unordered_map<int, vect
 
 	}
 }
+
 void GMPHD_MAF::ClassifyReliableTracklets2LiveLost(int iFrmCnt, const unordered_map<int, vector<BBTrk>>& reliables, vector<BBTrk>& liveReliables, vector<BBTrk>& lostReliables, vector<BBTrk>& obss) {
 
 	unordered_map<int, vector<BBTrk>>::const_iterator iterT;
@@ -2106,6 +2123,7 @@ void GMPHD_MAF::ClassifyReliableTracklets2LiveLost(int iFrmCnt, const unordered_
 		}
 	}
 }
+
 void GMPHD_MAF::ArrangeRevivedTracklets(unordered_map<int, vector<BBTrk>>& tracks, vector<BBTrk>& lives) {
 
 	// ID Management
@@ -2180,6 +2198,7 @@ void GMPHD_MAF::ArrangeRevivedTracklets(unordered_map<int, vector<BBTrk>>& track
 		}
 	}
 }
+
 // Initialize Color Tab
 void GMPHD_MAF::InitializeMatrices(cv::Mat &F, cv::Mat &Q, cv::Mat &Ps, cv::Mat &R, cv::Mat &H, const int MODEL_TYPE)
 {
@@ -2225,6 +2244,7 @@ void GMPHD_MAF::InitializeMatrices(cv::Mat &F, cv::Mat &Q, cv::Mat &Ps, cv::Mat 
 	}
 
 }
+
 vector<BBDet> GMPHD_MAF::MergeDetInstances(vector<BBDet>& obss, const bool& IS_MOTS, const float& sOCC_TH) {
 
 	bool VIS_MERGE_ON = false;
@@ -2288,10 +2308,11 @@ vector<BBDet> GMPHD_MAF::MergeDetInstances(vector<BBDet>& obss, const bool& IS_M
 					cv::Mat mu3c; // (h, w, CV_8UC(3));
 					cv::cvtColor(mu, mu3c, cv::COLOR_GRAY2BGR/*, CV_8UC(3)*/);
 
-					cv::Vec3b overlap_color = { 255, 0, 0 };			// blue
-					if (m_value >= sOCC_TH && m_value < sMERGE_TH)	overlap_color = { 0, 255, 0 }; // green
-					else if (m_value >= sMERGE_TH)					overlap_color = { 0, 0, 255 }; // red
-
+					cv::Vec3b overlap_color = {255, 0, 0};			// blue
+					if (m_value >= sOCC_TH && m_value < sMERGE_TH)
+						overlap_color = {0, 255, 0}; // green
+					else if (m_value >= sMERGE_TH)
+						overlap_color = {0, 0, 255}; // red
 
 					cv::Rect ru((ri.x < rj.x) ? ri.x : rj.x, (ri.y < rj.y) ? ri.y : rj.y, mu.cols, mu.rows);
 
@@ -2395,13 +2416,15 @@ vector<BBDet> GMPHD_MAF::MergeDetInstances(vector<BBDet>& obss, const bool& IS_M
 		cv::imshow("Merged Detection Instance", frameMerge);
 
 		int key;
-		if (merge_check)	cv::waitKey();
+		if (merge_check)
+			cv::waitKey();
 	}
 
 	frameMerge.release();
 
 	return frmDetsM;
 }
+
 vector<BBTrk> GMPHD_MAF::MergeTrkInstances(vector<BBTrk>& stats, const float& sOCC_TH) {
 
 	bool VIS_MERGE_ON = VIS_TRACK_MERGE;
@@ -2478,10 +2501,11 @@ vector<BBTrk> GMPHD_MAF::MergeTrkInstances(vector<BBTrk>& stats, const float& sO
 							cv::Mat mu3c; // (h, w, CV_8UC(3));
 							cv::cvtColor(mu, mu3c, cv::COLOR_GRAY2BGR/*, CV_8UC(3)*/);
 
-							cv::Vec3b overlap_color = { 255, 0, 0 };			// blue
-							if (m_value >= sOCC_TH && m_value < sMERGE_TH)	overlap_color = { 0, 255, 0 }; // green
-							else if (m_value >= sMERGE_TH)					overlap_color = { 0, 0, 255 }; // red
-
+							cv::Vec3b overlap_color = {255, 0, 0};			// blue
+							if (m_value >= sOCC_TH && m_value < sMERGE_TH)
+								overlap_color = {0, 255, 0}; // green
+							else if (m_value >= sMERGE_TH)
+								overlap_color = {0, 0, 255}; // red
 
 							cv::Rect ru((ri.x < rj.x) ? ri.x : rj.x, (ri.y < rj.y) ? ri.y : rj.y, mu.cols, mu.rows);
 
@@ -2582,6 +2606,7 @@ vector<BBTrk> GMPHD_MAF::MergeTrkInstances(vector<BBTrk>& stats, const float& sO
 
 	return frmTracksM;
 }
+
 vector<int> GMPHD_MAF::BuildMergeGroupsMinID(const vector<BBTrk>& frmTracks, vector<vector<int>>& mergeIdxList) {
 	vector<int> group_min_idx(mergeIdxList.size(), -1);
 
@@ -2600,6 +2625,7 @@ vector<int> GMPHD_MAF::BuildMergeGroupsMinID(const vector<BBTrk>& frmTracks, vec
 
 	return group_min_idx;
 }
+
 vector<int> GMPHD_MAF::BuildMergeGroupsMaxConfID(const vector<BBDet>& frmDets, vector<vector<int>>& mergeIdxList) {
 	vector<int> group_min_idx(mergeIdxList.size(), -1);
 
@@ -2618,6 +2644,7 @@ vector<int> GMPHD_MAF::BuildMergeGroupsMaxConfID(const vector<BBDet>& frmDets, v
 
 	return group_min_idx;
 }
+
 void GMPHD_MAF::MergeSegMasksRects(const vector<cv::Mat>& in_masks, const vector<cv::Rect>& in_rects, cv::Mat& out_mask, cv::Rect& out_rect) {
 
 	int min[2] = { in_rects[0].x , in_rects[0].y };
@@ -2668,10 +2695,12 @@ void GMPHD_MAF::MergeSegMasksRects(const vector<cv::Mat>& in_masks, const vector
 	// 0, 127-in_rects.size() �� �������� �ɼ��� ���� �� �ְڴ�. -in_rects.size() �� cv::CV_8UC �� �Ҽ��� ����� �����ԵǴ� ���� ����
 	double th = 255.0 * nR - in_rects.size();
 	cv::threshold(Mu, Mu, th, 255, cv::THRESH_BINARY);
-	if (!out_mask.empty()) out_mask.release();
+	if (!out_mask.empty())
+		out_mask.release();
 	out_mask = Mu;
 	out_rect = cv::Rect(x, y, w, h);
 }
+
 int GMPHD_MAF::FindGroupMinIDRecursive(const int& i, vector<bool>& visitTable, const vector<BBTrk>& frmTracks, const vector<vector<int>>& mergeIdxList, const int& cur_min_idx) {
 
 	if (visitTable[i]) {
@@ -2695,6 +2724,7 @@ int GMPHD_MAF::FindGroupMinIDRecursive(const int& i, vector<bool>& visitTable, c
 		return tmp_min_idx;
 	}
 }
+
 int GMPHD_MAF::FindGroupMaxConfIDRecursive(const int& i, vector<bool>& visitTable, const vector<BBDet>& frmDets, const vector<vector<int>>& mergeIdxList, const int& cur_min_idx) {
 	if (visitTable[i]) {
 		return cur_min_idx;
