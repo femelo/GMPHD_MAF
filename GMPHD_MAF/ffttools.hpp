@@ -89,7 +89,7 @@ cv::Mat fftd(cv::Mat img, bool backwards)
             }
     }
     fftw_execute(p);
-    cv::Mat res(img.rows, img.cols, CV_64FC2);
+    cv::Mat res(img.rows, img.cols, CV_64FC(2));
 
 
     for (int i = 0; i < img.rows; i++)

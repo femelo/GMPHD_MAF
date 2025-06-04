@@ -420,7 +420,7 @@ void cvPrintMat(cv::Mat matrix, std::string name)
 {
 	/*
 	<Mat::type()>
-	depth�� channels���� �����ϴ� ���� ex. CV_64FC1
+	depth�� channels���� �����ϴ� ���� ex. CV_64FC(1)
 	<Mat::depth()>
 	CV_8U - 8-bit unsigned integers ( 0..255 )
 	CV_8S - 8-bit signed integers ( -128..127 )

@@ -233,37 +233,39 @@ void RunMOTSequence(const int& sq, const std::string& seqName, const std::string
 	} else {
 		// Default Tracker Settings
 		printf("Default parameters are set.\n");
-		MOTSParallel[0]->SetParams(MOTparams(sym::OBJECT_TYPE::CAR,
-			0.6, \
-			sym::TRACK_INIT_MIN[0],	/*{1,2,3,4,5}*/\
-			sym::TRACK_T2TA_MAX[3],	/*{5,10,15,20,30,60,80,100}*/\
-			MERGE_METRIC_mIOU,		/*{0:SIOA, 1:IOU, 2:sIOU}*/\
-			sym::MERGE_THS[1],		/*{0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0}*/\
-			sym::VEL_UP_ALPHAS[4],	/*{0.0(0),...,0.4(4),0.5(5),...,0.99(11)}, KITTI-MOTS: 0.4(car)*/\
+		MOTSParallel[0]->SetParams(MOTparams(
+			sym::OBJECT_TYPE::CAR,
+			0.6,
+			sym::TRACK_INIT_MIN[0],	/*{1,2,3,4,5}*/
+			sym::TRACK_T2TA_MAX[3],	/*{5,10,15,20,30,60,80,100}*/
+			MERGE_METRIC_mIOU,		/*{0:SIOA, 1:IOU, 2:sIOU}*/
+			sym::MERGE_THS[1],		/*{0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0}*/
+			sym::VEL_UP_ALPHAS[4],	/*{0.0(0),...,0.4(4),0.5(5),...,0.99(11)}, KITTI-MOTS: 0.4(car)*/
 			sym::TRACK_INIT_MIN[0] * 10,
 			sym::FRAME_OFFSETS[DB_TYPE],
-			sym::AFFINITY_OPT::KCF, sym::AFFINITY_OPT::KCF/*KITTI-MOTS (maskrcnn, BB2Seg+RRC): KCF, KCF*/,
-			false, false/*MASK_ON*//*KITTI-MOTS (maskrcnnm): false, false*/,
-			cv::Vec2f(0.5f, 0.85f), cv::Vec2f(0.5f, 0.85f)/*KITTI-MOTS (maskrcnn): 0.5, 0.85*/,
+			sym::AFFINITY_OPT::KCF, sym::AFFINITY_OPT::KCF, /*KITTI-MOTS (maskrcnn, BB2Seg+RRC): KCF, KCF*/
+			false, false, /*MASK_ON*//*KITTI-MOTS (maskrcnnm): false, false*/
+			cv::Vec2f(0.5f, 0.85f), cv::Vec2f(0.5f, 0.85f), /*KITTI-MOTS (maskrcnn): 0.5, 0.85*/
 			cv::Vec2f(0.1f, 0.9f), cv::Vec2f(0.1f, 0.9f),
-			cv::Vec2b(false, false)));/*GATE_ON, MOTS20: true, true, KITTI-MOTS: false, false*/
+			cv::Vec2b(false, false))); /*GATE_ON, MOTS20: true, true, KITTI-MOTS: false, false*/
 
-		MOTSParallel[1]->SetParams(MOTparams(sym::OBJECT_TYPE::PEDESTRIAN,
-			0.7, \
-			sym::TRACK_INIT_MIN[0],	/*{1,2,3,4,5}*/\
-			sym::TRACK_T2TA_MAX[3],	/*{5,10,15,20,30,60,80,100}, MOT:30?, MOTS20:30, KITTI-MOTS: 20*/\
-			MERGE_METRIC_mIOU,		/*{0:SIOA, 1:IOU, 2:sIOU}*/\
-			sym::MERGE_THS[1],		/*{0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0}*/\
-			sym::VEL_UP_ALPHAS[5],	/*{0.0(0),...,0.4(4),0.5(5),...0.95(9),...,0.99(11)}, MOTS20:0.4, KITTI-MOTS: 0.5(ped)*/\
+		MOTSParallel[1]->SetParams(MOTparams(
+			sym::OBJECT_TYPE::PEDESTRIAN,
+			0.7,
+			sym::TRACK_INIT_MIN[0],	/*{1,2,3,4,5}*/
+			sym::TRACK_T2TA_MAX[3],	/*{5,10,15,20,30,60,80,100}, MOT:30?, MOTS20:30, KITTI-MOTS: 20*/
+			MERGE_METRIC_mIOU,		/*{0:SIOA, 1:IOU, 2:sIOU}*/
+			sym::MERGE_THS[1],		/*{0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0}*/
+			sym::VEL_UP_ALPHAS[5],	/*{0.0(0),...,0.4(4),0.5(5),...0.95(9),...,0.99(11)}, MOTS20:0.4, KITTI-MOTS: 0.5(ped)*/
 			sym::TRACK_INIT_MIN[0] * 10,
 			sym::FRAME_OFFSETS[DB_TYPE],
-			sym::AFFINITY_OPT::KCF, sym::AFFINITY_OPT::KCF/*MOTS20: MAF, GMPHD, KITTI-MOTS: KCF, KCF*/,
-			true, true/*MASK_ON, MOTS20: true, true, KITTI-MOTS: true, true*/,
-			cv::Vec2f(0.5f, 0.85f), cv::Vec2f(0.5f, 0.85f)/*MOTS20: 0.1f, 0.7f, KITTI-MOTS: 0.5f, 0.85f*/,
+			sym::AFFINITY_OPT::KCF, sym::AFFINITY_OPT::KCF, /*MOTS20: MAF, GMPHD, KITTI-MOTS: KCF, KCF*/
+			true, true, /*MASK_ON, MOTS20: true, true, KITTI-MOTS: true, true*/
+			cv::Vec2f(0.5f, 0.85f), cv::Vec2f(0.5f, 0.85f), /*MOTS20: 0.1f, 0.7f, KITTI-MOTS: 0.5f, 0.85f*/
 			cv::Vec2f(0.1f, 0.9f), cv::Vec2f(0.1f, 0.9f),
-			cv::Vec2b(false, false)));/*GATE_ON, MOTS20: true, true, KITTI-MOTS: false, false*/
+			cv::Vec2b(false, false))); /*GATE_ON, MOTS20: true, true, KITTI-MOTS: false, false*/
 	}
-	
+
 	int sumValidObjs[2] = {0, 0};
 
 	// Run Tracking Process (MOTS)
@@ -462,7 +464,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 			// Handling the Ovelapping Segments
 			if (DB_TYPE == DB_TYPE_KITTI_MOTS || DB_TYPE == DB_TYPE_MOTS20) {
 				int frmW = tracker->frmWidth; int frmH = tracker->frmHeight;
-				cv::Mat maskMAT(frmH, frmW, CV_8UC1, cv::Scalar(0));
+				cv::Mat maskMAT(frmH, frmW, CV_8UC(1), cv::Scalar(0));
 
 				for (int tr = 0; tr < tracker->allLiveReliables[i].size(); ++tr) {
 
@@ -596,7 +598,7 @@ void WriteMOTResults(const std::string& train_or_test, const std::vector<std::st
 			if (DB_TYPE == DB_TYPE_KITTI_MOTS || DB_TYPE == DB_TYPE_MOTS20) {
 				int frmW = carTracker->frmWidth; int frmH = carTracker->frmHeight;
 
-				cv::Mat maskMAT(frmH, frmW, CV_8UC1, cv::Scalar(0));
+				cv::Mat maskMAT(frmH, frmW, CV_8UC(1), cv::Scalar(0));
 				//printf("1");
 				for (int tr = 0; tr < carTracker->allLiveReliables[i].size(); ++tr) {
 

@@ -118,14 +118,12 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, b
             output_sigma_factor = 0.1;
 
             _labfeatures = true;
-            _labCentroids = cv::Mat(labdata::nClusters, 3, CV_32FC1, &labdata::data);
-            cell_sizeQ = cell_size*cell_size;
-        }
-        else{
+            _labCentroids = cv::Mat(labdata::nClusters, 3, CV_32FC(1), &labdata::data);
+            cell_sizeQ = cell_size * cell_size;
+        } else{
             _labfeatures = false;
         }
-    }
-    else {   // RAW
+    } else {   // RAW
         interp_factor = 0.075;
         sigma = 0.2; 
         cell_size = 1;
@@ -147,13 +145,11 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab, b
             //printf("Multiscale does not support non-fixed window.\n");
             fixed_window = true;
         }
-    }
-    else if (fixed_window) {  // fit correction without multiscale
+    } else if (fixed_window) { // fit correction without multiscale
         template_size = 96;
         //template_size = 100;
         scale_step = 1;
-    }
-    else {						// Caculate features and similarity extracted from ROI
+    } else { // Caculate features and similarity extracted from ROI
         template_size = 1;
         scale_step = 1;
     }
@@ -200,8 +196,7 @@ void KCFTracker::init(const cv::Mat& image, const cv::Rect &roi, const cv::Mat &
 
 					bg_pts.push_back(cv::Point2i(c, r));
 					bg_sum_ += (cv::Vec3d)bgr;
-				}
-				else {
+				} else {
 					fg_pts.push_back(cv::Point2i(c, r));
 					fg_sum_ += (cv::Vec3d)bgr;
 				}
@@ -223,14 +218,13 @@ void KCFTracker::init(const cv::Mat& image, const cv::Rect &roi, const cv::Mat &
 
 		_tmpl = getFeatures(masked_image, 1);
 		masked_image.release();
-	}
-	else {
+	} else {
 		_tmpl = getFeatures(image, 1);
 	}
 	_prob = createGaussianPeak(size_patch[0], size_patch[1]);
-	_alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-    //_num = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-    //_den = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
+	_alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC(2), float(0));
+    //_num = cv::Mat(size_patch[0], size_patch[1], CV_32FC(2), float(0));
+    //_den = cv::Mat(size_patch[0], size_patch[1], CV_32FC(2), float(0));
     train(_tmpl, 1.0); // train with initial frame
 
  }
@@ -249,7 +243,7 @@ cv::Rect KCFTracker::update(cv::Mat& image)
 
     float peak_value;
 	cv::Mat res_mat;
-    cv::Point2f res = detect(_tmpl, getFeatures(image, 0, 1.0f), peak_value,res_mat);
+    cv::Point2f res = detect(_tmpl, getFeatures(image, 0, 1.0f), peak_value, res_mat);
     if (scale_step != 1) { 
         // Test at a smaller _scale
         float new_peak_value;
@@ -288,7 +282,7 @@ cv::Rect KCFTracker::update(cv::Mat& image)
 	
 	// printf("res_mat:%d by %d (type:%d, nc:%d)\n", res_mat.rows, res_mat.cols, res_mat.type(), res_mat.channels());
 	//cvPrintMat(res_mat, "res_mat");
-	cv::Mat res_color(cv::Size(res_mat.cols, res_mat.rows), CV_8UC3);
+	cv::Mat res_color(cv::Size(res_mat.cols, res_mat.rows), CV_8UC(3));
 	cv::Mat res_gray; 
 	
 	//cvPrintMat(res_mat, "res_mat");
@@ -298,9 +292,9 @@ cv::Rect KCFTracker::update(cv::Mat& image)
 			res_mat.at<float>(r, c) /= 2.0;
 		}
 	}
-	res_mat.convertTo(res_gray, CV_8UC1, 255.0 );
+	res_mat.convertTo(res_gray, CV_8UC(1), 255.0 );
 	/*cv::threshold(res_mat, res_mat, 0.0, 2.0, cv::THRESH_TOZERO);
-	res_mat.convertTo(res_gray, CV_8UC1, 255.0);*/
+	res_mat.convertTo(res_gray, CV_8UC(1), 255.0);*/
 	//cvPrintMat(res_mat, "res_mat_threshold");
 	cv::normalize(res_gray, res_gray, 255, 0, cv::NORM_MINMAX);
 	for (int r = 0; r < res_gray.rows; r++) {
@@ -308,13 +302,11 @@ cv::Rect KCFTracker::update(cv::Mat& image)
 			res_color.at<cv::Vec3b>(r, c) = this->color_map.at<cv::Vec3b>(0, res_gray.at<uchar>(r,c));
 		}
 	}
-	cv::Mat res_tmpl;// (cv::Size(res_color.cols * 10, res_color.rows * 10), CV_8UC3);
+	cv::Mat res_tmpl;// (cv::Size(res_color.cols * 10, res_color.rows * 10), CV_8UC(3));
 	cv::Rect _roi_int((int)_roi.x, (int)_roi.y, (int)_roi.width, (int)_roi.height);
 	_roi_int = this->RectExceptionHandling(this->fWidth, this->fHeight, _roi_int);
 	if (_roi_int.width >= 1 && _roi_int.height >= 1) {
-		
 		cv::resize(res_color, res_tmpl, cv::Size(_roi_int.width, _roi_int.height));
-
 		train(x, interp_factor);
 	}
 	
@@ -336,6 +328,7 @@ cv::Rect KCFTracker::update(cv::Mat& image)
 
     return _roi_int;
 }
+
 cv::Rect KCFTracker::update(cv::Mat& image, float& confProb)
 {
 	if (_roi.x + _roi.width <= 0) _roi.x = -_roi.width + 1;
@@ -381,7 +374,7 @@ cv::Rect KCFTracker::update(cv::Mat& image, float& confProb)
 	if (_roi.x + _roi.width <= 0) _roi.x = -_roi.width + 2;
 	if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 2;
 
-	cv::Mat res_color(cv::Size(res_mat.cols, res_mat.rows), CV_8UC3);
+	cv::Mat res_color(cv::Size(res_mat.cols, res_mat.rows), CV_8UC(3));
 	cv::Mat res_gray;
 
 	// Re-scaling from -1.0~1.0 to 0.0~1.0
@@ -392,7 +385,7 @@ cv::Rect KCFTracker::update(cv::Mat& image, float& confProb)
 		}
 	}
 
-	res_mat.convertTo(res_gray, CV_8UC1, 255.0);
+	res_mat.convertTo(res_gray, CV_8UC(1), 255.0);
 	cv::normalize(res_gray, res_gray, 255, 0, cv::NORM_MINMAX);
 
 	float sumResNorm = 0, sumResNormPerSize;
@@ -402,9 +395,11 @@ cv::Rect KCFTracker::update(cv::Mat& image, float& confProb)
 			sumResNorm += ((float)(res_gray.at<uchar>(r, c)) / (float)255.0);
 		}
 	}
-	int area = res_gray.rows*res_gray.cols;
-	if (area>0)	sumResNormPerSize = sumResNorm / area;
-	else		sumResNormPerSize = 0.99;
+	int area = res_gray.rows * res_gray.cols;
+	if (area > 0)
+		sumResNormPerSize = sumResNorm / area;
+	else
+		sumResNormPerSize = 0.99;
 
 	confProb = sumResNormPerSize;
 
@@ -415,7 +410,9 @@ cv::Rect KCFTracker::update(cv::Mat& image, float& confProb)
 
 	return _roi;
 }
-cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb, 
+
+cv::Rect KCFTracker::update(
+	const cv::Mat& image, float& confProb, 
 	cv::Mat &confMapVis, const cv::Rect &roi, const bool& GET_VIS,
 	const cv::Mat &mask, const bool& USE_MASK) {
 
@@ -427,10 +424,10 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 	//printf("(%d:%d,%d)\n    [MOT] init_roi (%d,%d,%d,%d)", image.empty(), image.cols, image.rows
 	//	, roi.x, roi.y, roi.width, roi.height);
 
-	if (_roi.x + _roi.width <= 0)	_roi.x = -_roi.width + 1;
-	if (_roi.y + _roi.height <= 0)	_roi.y = -_roi.height + 1;
-	if (_roi.x >= image.cols - 1)	 _roi.x = proc_image.cols - 2;
-	if (_roi.y >= image.rows - 1)	_roi.y = proc_image.rows - 2;
+	if (_roi.x + _roi.width <= 0) _roi.x = -_roi.width + 1;
+	if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 1;
+	if (_roi.x >= image.cols - 1) _roi.x = proc_image.cols - 2;
+	if (_roi.y >= image.rows - 1) _roi.y = proc_image.rows - 2;
 
 	//printf("->(%.f,%.f,%.f,%.f)\n", _roi.x, _roi.y, _roi.width, _roi.height);
 
@@ -480,7 +477,6 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 					// masked_image.at<cv::Vec3b>(r, c) = cv::Vec3b(0, 0, 0);
 					// or ����� ������� ���̱� ���� average �� rgb value �� �־� ���°��� ���?
 					// -> �׳� �������״�� �ϴ°� ���� ������
-
 					bg_pts.push_back(cv::Point2i(c, r)); 
 					bg_sum_ += (cv::Vec3d)bgr;
 				}
@@ -497,14 +493,20 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 		fg_sum_[0] /= fg_pts.size(); fg_sum_[1] /= fg_pts.size(); fg_sum_[2] /= fg_pts.size();
 		ag_sum_[0] /= ag_pts.size(); ag_sum_[1] /= ag_pts.size(); ag_sum_[2] /= ag_pts.size();
 
-		if (false) {
+		if (false) { // not executing
 			cv::Vec3b fg_avg_inv;
-			if (fg_sum_[0] >= 128)	fg_avg_inv[0] = fg_sum_[0] - 128;
-			else					fg_avg_inv[0] = fg_sum_[0] + 128;
-			if (fg_sum_[1] >= 128)	fg_avg_inv[1] = fg_sum_[1] - 128;
-			else					fg_avg_inv[1] = fg_sum_[1] + 128;
-			if (fg_sum_[2] >= 128)	fg_avg_inv[2] = fg_sum_[2] - 128;
-			else					fg_avg_inv[2] = fg_sum_[2] + 128;
+			if (fg_sum_[0] >= 128)
+				fg_avg_inv[0] = fg_sum_[0] - 128;
+			else
+				fg_avg_inv[0] = fg_sum_[0] + 128;
+			if (fg_sum_[1] >= 128)
+				fg_avg_inv[1] = fg_sum_[1] - 128;
+			else
+				fg_avg_inv[1] = fg_sum_[1] + 128;
+			if (fg_sum_[2] >= 128)
+				fg_avg_inv[2] = fg_sum_[2] - 128;
+			else
+				fg_avg_inv[2] = fg_sum_[2] + 128;
 		}
 
 		for (const auto& p : bg_pts) {
@@ -525,9 +527,7 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 		cx = _roi.x + _roi.width / 2.0f;
 		cy = _roi.y + _roi.height / 2.0f;
 
-
-	}
-	else {
+	} else {
 		proc_image = image;
 	}
 
@@ -592,7 +592,7 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 	if (GET_VIS) {
 
 		if (_roi_int_frm.width > 0 && _roi_int_frm.height > 0) {
-			cv::Mat res_color(cv::Size(res_mat.cols, res_mat.rows), CV_8UC3);
+			cv::Mat res_color(cv::Size(res_mat.cols, res_mat.rows), CV_8UC(3));
 			cv::Mat res_gray;
 
 			//cvPrintMat(res_mat, "res_mat");
@@ -603,20 +603,19 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 				for (int c = 0; c < res_mat.cols; c++) {
 					res_mat.at<float>(r, c) += 1.0;
 					res_mat.at<float>(r, c) /= 2.0;
-
 					//sumRes += res_mat.at<float>(r, c);
 				}
 			}
 
 			//cv::threshold(res_mat, res_mat, 0.0, 2.0, cv::THRESH_TOZERO);
 			//std::cout << "5";
-			res_mat.convertTo(res_gray, CV_8UC1, 255.0);
+			res_mat.convertTo(res_gray, CV_8UC(1), 255.0);
 			//cvPrintMat(res_gray, "res_gray");
 			cv::normalize(res_gray, res_gray, 255, 0, cv::NORM_MINMAX);
 			//cvPrintMat(res_gray, "res_gray_norm");
 
 			// Updated roi results
-			cv::Mat res_vis;	// (cv::Size(res_color.cols * 10, res_color.rows * 10), CV_8UC3);
+			cv::Mat res_vis;	// (cv::Size(res_color.cols * 10, res_color.rows * 10), CV_8UC(3));
 			float sumResNorm = 0, sumResNormPerSize;
 
 			if (!USE_MASK) {
@@ -628,10 +627,11 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 						sumResNorm += ((float)(res_gray.at<uchar>(r, c)) / (float)255.0);
 					}
 				}
-				if (area > 0)	sumResNormPerSize = sumResNorm / area;
-				else			sumResNormPerSize = 0.99;
-			}
-			else {
+				if (area > 0)
+					sumResNormPerSize = sumResNorm / area;
+				else
+					sumResNormPerSize = 0.99;
+			} else {
 				cv::Mat _bin_mask, res_gray_mask;
 				cv::resize(res_gray, res_gray_mask, cv::Size(_roi_mask.width, _roi_mask.height));
 				cv::resize(mask, _bin_mask, cv::Size(_roi_mask.width, _roi_mask.height));
@@ -644,7 +644,7 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 				cv::normalize(res_gray_mask, res_gray_mask, 255, 0, cv::NORM_MINMAX, -1, bin_mask);
 
 				int pixels_area = 0;
-				cv::Mat res_color_mask(cv::Size(res_gray_mask.cols, res_gray_mask.rows), CV_8UC3);
+				cv::Mat res_color_mask(cv::Size(res_gray_mask.cols, res_gray_mask.rows), CV_8UC(3));
 
 				for (int r = 0; r < res_gray_mask.rows; r++) {
 					for (int c = 0; c < res_gray_mask.cols; c++) {
@@ -652,20 +652,23 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 							res_color_mask.at<cv::Vec3b>(r, c) = this->color_map.at<cv::Vec3b>(0, res_gray_mask.at<uchar>(r, c));
 							sumResNorm += ((float)(res_gray_mask.at<uchar>(r, c)) / (float)255.0);
 							++pixels_area;
-						}
-						else {
+						} else {
 							res_color_mask.at<cv::Vec3b>(r, c) = cv::Vec3b(0, 0, 0);
 						}
 					}
 				}
-				if (pixels_area > 0)	sumResNormPerSize = sumResNorm / pixels_area;
-				else					sumResNormPerSize = 0.99;
+				if (pixels_area > 0)
+					sumResNormPerSize = sumResNorm / pixels_area;
+				else
+					sumResNormPerSize = 0.99;
 
 				res_color.release();
 				res_color = res_color_mask;
 
-				if (!res_gray_mask.empty())res_gray_mask.release();
-				if (!_bin_mask.empty())_bin_mask.release();
+				if (!res_gray_mask.empty())
+					res_gray_mask.release();
+				if (!_bin_mask.empty())
+					_bin_mask.release();
 			}
 
 			
@@ -675,11 +678,12 @@ cv::Rect KCFTracker::update(const cv::Mat& image, float& confProb,
 
 			train(x, interp_factor);
 
-			if (!res_mat.empty()) res_mat.release();
-			if (!res_vis.empty()) res_vis.release();
-		}
-		else { // out of frame
-			confMapVis = cv::Mat(roi.height, roi.width, CV_8UC3, cv::Scalar(0, 0, 0));
+			if (!res_mat.empty())
+				res_mat.release();
+			if (!res_vis.empty())
+				res_vis.release();
+		} else { // out of frame
+			confMapVis = cv::Mat(roi.height, roi.width, CV_8UC(3), cv::Scalar(0, 0, 0));
 			confProb = 0.99;
 		}	
 	}
@@ -722,6 +726,7 @@ cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value)
 
     return p;
 }
+
 cv::Point2f KCFTracker::detect(cv::Mat k1, cv::Mat k2, float &peak_value, cv::Mat& res_output) {
 	using namespace FFTTools;
 	cv::Mat k = gaussianCorrelation(k2, k1);
@@ -749,6 +754,7 @@ cv::Point2f KCFTracker::detect(cv::Mat k1, cv::Mat k2, float &peak_value, cv::Ma
 
 	return p;
 }
+
 // train tracker with a single image
 void KCFTracker::train(cv::Mat x, float train_interp_factor)
 {
@@ -759,7 +765,6 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
     
     _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
     _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;
-
 
     /*cv::Mat kf = fftd(gaussianCorrelation(x, x));
     cv::Mat num = complexMultiplication(kf, _prob);
@@ -793,9 +798,7 @@ cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2)
             caux.convertTo(caux,CV_32F);
             c = c + real(caux);
         }
-    }
-    // Gray features
-    else {
+    } else { // Gray features
         cv::mulSpectrums(fftd(x1), fftd(x2), c, 0, true);
         c = fftd(c, true);
         rearrange(c);
@@ -850,8 +853,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
 
             _tmpl_sz.width = padded_w / _scale;
             _tmpl_sz.height = padded_h / _scale;
-        }
-        else {  //No template size given, use ROI size
+        } else {  //No template size given, use ROI size
 			printf("No template size given, use ROI size");
             _tmpl_sz.width = padded_w;
             _tmpl_sz.height = padded_h;
@@ -873,8 +875,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
             // Round to cell size and also make it even
             _tmpl_sz.width = ( ( (int)(_tmpl_sz.width / (2 * cell_size)) ) * 2 * cell_size ) + cell_size*2;
             _tmpl_sz.height = ( ( (int)(_tmpl_sz.height / (2 * cell_size)) ) * 2 * cell_size ) + cell_size*2;
-        }
-        else {  //Make number of pixels even (helps with some logic involving half-dimensions)
+        } else {  //Make number of pixels even (helps with some logic involving half-dimensions)
             _tmpl_sz.width = (_tmpl_sz.width / 2) * 2;
             _tmpl_sz.height = (_tmpl_sz.height / 2) * 2;
         }
@@ -911,7 +912,7 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
         CvLSVMFeatureMapCaskade *map;
         getFeatureMaps(&z_ipl, cell_size, &map);
 		//printf("map(%d:%d:%d)", map->sizeY, map->sizeX, map->numFeatures);
-		if(map->sizeY>2 && map->sizeX >2) // sym
+		if(map->sizeY > 2 && map->sizeX >2) // sym
 			normalizeAndTruncate(map,0.2f);
 		//printf("mapNorm(%d:%d:%d)", map->sizeY, map->sizeX, map->numFeatures);
         PCAFeatureMaps(map);
@@ -935,11 +936,11 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
 
             int cntCell = 0;
             // Iterate through each cell
-            for (int cY = cell_size; cY < z.rows-cell_size; cY+=cell_size){
+            for (int cY = cell_size; cY < z.rows-cell_size; cY+=cell_size) {
                 for (int cX = cell_size; cX < z.cols-cell_size; cX+=cell_size){
                     // Iterate through each pixel of cell (cX,cY)
-                    for(int y = cY; y < cY+cell_size; ++y){
-                        for(int x = cX; x < cX+cell_size; ++x){
+                    for (int y = cY; y < cY+cell_size; ++y){
+                        for(int x = cX; x < cX+cell_size; ++x) {
                             // Lab components for each pixel
                             float l = (float)input[(z.cols * y + x) * 3];
                             float a = (float)input[(z.cols * y + x) * 3 + 1];
@@ -1206,9 +1207,9 @@ void KCFTracker::createHanningMats()
     if (_hogfeatures) {
         cv::Mat hann1d = hann2d.reshape(1,1); // Procedure do deal with cv::Mat multichannel bug
         
-        hann = cv::Mat(cv::Size(size_patch[0]*size_patch[1], size_patch[2]), CV_32F, cv::Scalar(0));
+        hann = cv::Mat(cv::Size(size_patch[0] * size_patch[1], size_patch[2]), CV_32F, cv::Scalar(0));
         for (int i = 0; i < size_patch[2]; i++) {
-            for (int j = 0; j<size_patch[0]*size_patch[1]; j++) {
+            for (int j = 0; j<size_patch[0] * size_patch[1]; j++) {
                 hann.at<float>(i,j) = hann1d.at<float>(0,j);
             }
         }

@@ -31,8 +31,8 @@ original implementation: [https://github.com/SonginCV/MAF_HDA](https://github.co
 
 ### Libraries
 
-+ OpenCV 4.6.0 
-+ Boost 1.81.0 (Windows Binaries)
++ OpenCV 4.6.0
++ Boost 1.81.0
 
 To install dependencies:
 
@@ -203,7 +203,7 @@ In KITTI object tracking test 0018 sequence.
 
 ## Experimental results
 
-Original authors participated in "tracking only" track in 5th BMTT MOTChallenge Workshop: Multi-Object Tracking and Segmentation in conjunction with CVPR 2020.
+The original authors participated in "tracking only" track in 5th BMTT MOTChallenge Workshop: Multi-Object Tracking and Segmentation in conjunction with CVPR 2020.
 
 The results are available in 
 CVPR 2020 MOTSChallenge [[link](https://motchallenge.net/results/CVPR_2020_MOTS_Challenge/)], 

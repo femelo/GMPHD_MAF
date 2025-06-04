@@ -9,7 +9,7 @@ All rights reserved.
 This software is an implementation of the GMPHD_MAF tracker,
 which not only refers to the paper entitled
 "Online Multi-Object Tracking and Segmentation with GMPHD Filter and Mask-Based Affinity Fusion"
-but also is available at https://github.com/SonginCV/GMPHD_MAF.
+but also is available at https://github.com/SonginCV/MAF_HDA.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -90,7 +90,7 @@ void GMPHD_MAF::Destroy() {
 */
 int GMPHD_MAF::RunMOTS(const int& iFrmCnt, const cv::Mat& img, const vector<BBDet>& dets, vector<BBTrk>& out_tracks) {
 	if (this->iTotalFrames == 0)
-		cerr << "[ERROR] Set the number of total frames !!" << endl;
+		std::cerr << "[ERROR] Set the number of total frames !!" << std::endl;
 
 	if (this->sysFrmCnt == 0)
 		this->InitImagesQueue(img.cols, img.rows);
@@ -309,7 +309,8 @@ void GMPHD_MAF::PredictFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>& s
 				future_rec.y += iter->vy;
 
 				is_out = this->IsOutOfFrame(future_rec, this->frmWidth, this->frmHeight);
-				if (is_out) iter->isAlive = false;
+				if (is_out)
+					iter->isAlive = false;
 
 			}
 			if (!is_out) {
@@ -392,7 +393,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 						}
 
 						if (overlapping_ratio >= this->params.MERGE_RATIO_THRESHOLD) // threshold
-							q_values[r][c] = obss[r].weight*overlapping_ratio;
+							q_values[r][c] = obss[r].weight * overlapping_ratio;
 					}
 				}
 			}
@@ -411,30 +412,34 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 
 		for (int c = 0; c < stats_matrix[r].size(); ++c) {
 
-			double numerator =  /*P_detection*/stats_matrix[r][c].weight*q_values[r][c];
+			double numerator =  /*P_detection*/ stats_matrix[r][c].weight * q_values[r][c];
 
 			if (numerator > DBL_MAX || numerator < DBL_MIN) {
 				stats_matrix[r][c].weight = 0.0;
 				// numerator = 0.0;
 			}
 			else
-				stats_matrix[r][c].weight = numerator / denominator;							// (19), numerator(����), denominator(�и�)
+				stats_matrix[r][c].weight = numerator / denominator; // (19), numerator(����), denominator(�и�)
 
 			// Scaling the affinity value to Integer
 			if (stats_matrix[r][c].weight > 0.0) {
-				if ((double)(/*stats_matrix[r][c].weight*/numerator) < (double)(FLT_MIN)) {
+				if ((double)( /*stats_matrix[r][c].weight*/ numerator) < (double)(FLT_MIN)) {
 					std::cerr << "[" << iFrmCnt << "] weight(FW) < FLT_MIN" << std::endl;
-					if (!AFFINITY_COST_L1_OR_L2_NORM_FW)	m_cost[c][r] = -1;
-					else									m_cost[c][r] = 10000;	// ��¥�� �������� ���� ���ø��� �ֵ��� GATING ���� ���ư��״� ���� 10000
+					if (!AFFINITY_COST_L1_OR_L2_NORM_FW)
+						m_cost[c][r] = -1;
+					else
+						m_cost[c][r] = 10000; // ��¥�� �������� ���� ���ø��� �ֵ��� GATING ���� ���ư��״� ���� 10000
+				} else {
+					if (!AFFINITY_COST_L1_OR_L2_NORM_FW)
+						m_cost[c][r] = -1.0 * Q_TH_LOW_10_INVERSE * numerator;
+					else
+						m_cost[c][r] = -100.0 * log(numerator); // log2l((double)numerator);
 				}
-				else {
-					if (!AFFINITY_COST_L1_OR_L2_NORM_FW)	m_cost[c][r] = -1.0*Q_TH_LOW_10_INVERSE * numerator;
-					else									m_cost[c][r] = -100.0*log(numerator); //log2l((double)numerator);
-				}
-			}
-			else {
-				if (!AFFINITY_COST_L1_OR_L2_NORM_FW)			m_cost[c][r] = 0;
-				else											m_cost[c][r] = 10000;	// upper bound, double �� ǥ�� ���ϴ°� -> association �ĺ� ���� ����
+			} else {
+				if (!AFFINITY_COST_L1_OR_L2_NORM_FW)
+					m_cost[c][r] = 0;
+				else
+					m_cost[c][r] = 10000;	// upper bound, double �� ǥ�� ���ϴ°� -> association �ĺ� ���� ����
 			}
 			/*printf("(FW) Obs%d(%d,%d,%d,%d,%.4f) -> Stat%d(id%d):%.lf (n:%lf, q:%.20lf, W':%.5f)\n",\
 			r, obss[r].rec.x, obss[r].rec.y, obss[r].rec.width, obss[r].rec.height, obss[r].weight,
@@ -470,7 +475,8 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 			cv::Mat canvasDA;
 
 			if (VIS_D2TA_DETAIL) {
-				cv::namedWindow(winTitleDA);	cv::moveWindow(winTitleDA, FW, 0);
+				cv::namedWindow(winTitleDA);
+				cv::moveWindow(winTitleDA, FW, 0);
 				canvasDA = cv::Mat(cellWH * (mStats)+margin, cellWH * (nObs + 1) + margin, CV_8UC(3), cv::Scalar(200, 200, 200));
 			}
 
@@ -478,7 +484,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 			vector<vector<BBTrk>> stats_dummy;
 			#pragma omp parallel for
 			for (int c = 0; c < mStats; ++c) {
-					//cv::Mat framePrev = this->imgBatch[this->params.QUEUE_SIZE-2];
+				//cv::Mat framePrev = this->imgBatch[this->params.QUEUE_SIZE-2];
 				cv::Mat frameProc = img.clone();
 
 				int id = stats[c].id;
@@ -521,8 +527,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 								//cv::rectangle(frameVis, obss[r].rec, cv::Scalar(0, 0, 0), -1);
 								if (VIS_D2TA_DETAIL)
 									confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
-							}
-							else {
+							} else {
 								cv::Rect res = stats_matrix[r][c].papp.update(frameProc, confProb, confMap, obss[r].rec, true, obss[r].segMask, this->params.SAF_MASK_D2TA);
 								//cv::addWeighted(frameVis(res), 0.5, confMap, 0.5, 0.0, frameVis(res));
 								//confMap.release();
@@ -543,8 +548,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 										confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 								}
 							}
-						}
-						else {
+						} else {
 							cv::Rect res = stats_matrix[r][c].papp.update(frameProc, confProb, confMap, obss[r].rec, true, obss[r].segMask, this->params.SAF_MASK_D2TA);
 
 							if (res.width < 1 || res.height < 1) {
@@ -569,19 +573,20 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 						}
 
 						char scores[256];
-						double score_gmphd_temp;// = pow(10, m_cost[c][r] / (-100.0));
+						double score_gmphd_temp; // = pow(10, m_cost[c][r] / (-100.0));
 						if (m_cost[c][r] < 10000) {
 							gmphd_cost[c][r] = pow(e_8, m_cost[c][r] / (-100.0));
 							score_gmphd_temp = gmphd_cost[c][r];
-						}
-						else {
+						} else {
 							gmphd_cost[c][r] = 0.0;
 							score_gmphd_temp = gmphd_cost[c][r];
 						}
 
-						float score_kcf_temp; // = (1.0 - confProb)/**objConf*/;
-						if (SOT_TRACK_OPT == SOT_USE_KCF_TRACKER)	score_kcf_temp = 1.0 - confProb;
-						else										score_kcf_temp = confProb;
+						float score_kcf_temp; // = (1.0 - confProb) /**objConf*/;
+						if (SOT_TRACK_OPT == SOT_USE_KCF_TRACKER)
+							score_kcf_temp = 1.0 - confProb;
+						else
+							score_kcf_temp = confProb;
 
 						kcf_cost[c][r] = score_kcf_temp;
 
@@ -599,13 +604,13 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 						}
 
 						// 
-						//kcf_cost[c][r] = scaleComb * -100 * log2f(1.0 - confProb);
+						// kcf_cost[c][r] = scaleComb * -100 * log2f(1.0 - confProb);
 						// m_cost[c][r] = m_cost[c][r] + kcf_cost[c][r];
 
-						/*if (confProb > CONF_THRESH)
+						/* if (confProb > CONF_THRESH)
 							m_cost[c][r] = 10000;
-						else*/
-						//	m_cost[c][r] = -100.0*log2l((double)(score_gmphd_temp*(1.0 - confProb)));
+						else */
+						// m_cost[c][r] = -100.0 * log2l((double)(score_gmphd_temp * (1.0 - confProb)));
 						if (VIS_D2TA_DETAIL) {
 							printf("	Det%d (%d,%d,%d,%d,%.5f)-IOU(%.3f), Cost(GMPHD:%s, KCF:%.5f)\n",
 								r, obss[r].rec.x, obss[r].rec.y, obss[r].rec.width, obss[r].rec.height, objConf,
@@ -615,8 +620,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 							if (VIS_D2TA_DETAIL) {
 								cv::putText(canvasDA, this->to_str(score_gmphd_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 							}
-						}
-						else {
+						} else {
 							if (VIS_D2TA_DETAIL)
 								cv::putText(canvasDA, "INF", cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
 						}
@@ -625,8 +629,10 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 							cv::putText(canvasDA, this->to_str(score_kcf_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 15 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, r), 1);
 						}
 
-						if (!confMap.empty())		confMap.release();
-						if (!confMapResize.empty()) confMapResize.release();
+						if (!confMap.empty())
+							confMap.release();
+						if (!confMapResize.empty())
+							confMapResize.release();
 					}
 
 				}
@@ -756,8 +762,7 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 
 				if (MODEL_TYPE == sym::MODEL_VECTOR::XYRyx) {
 					vr_t = (obss[r].ratio_yx) - (stats[c].ratio_yx);
-				}
-				else {
+				} else {
 
 					vx_t = (obss[r].rec.x + obss[r].rec.width / 2.0) - (stats[c].rec.x + stats[c].rec.width / 2.0);
 					vy_t = (obss[r].rec.y + obss[r].rec.height / 2.0) - (stats[c].rec.y + stats[c].rec.height / 2.0);
@@ -855,8 +860,10 @@ void GMPHD_MAF::DataAssocFrmWise(int iFrmCnt, const cv::Mat& img, vector<BBTrk>&
 			newTracks.push_back(r);
 
 			int id_new = this->usedIDcnt++;
-			if (IS_VEHICLE_ALL(this->trackObjType))			id_new = 2 * id_new + 1;
-			else if (IS_PERSON_EVAL(this->trackObjType))	id_new = 2 * id_new;
+			if (IS_VEHICLE_ALL(this->trackObjType))
+				id_new = 2 * id_new + 1;
+			else if (IS_PERSON_EVAL(this->trackObjType))
+				id_new = 2 * id_new;
 
 			BBTrk newTrk;
 			newTrk.fn = iFrmCnt;
@@ -932,14 +939,17 @@ float GMPHD_MAF::FrameWiseAffinity(BBDet ob, BBTrk &stat_temp, const int MODEL_T
 
 	if (MODEL_TYPE == sym::MODEL_VECTOR::XY) {
 		// Bounding box size contraint
-		if ((stat_temp.rec.area() >= ob.rec.area() * SIZE_CONSTRAINT_RATIO) || (stat_temp.rec.area() * SIZE_CONSTRAINT_RATIO <= ob.rec.area())) return 0.0;
+		if ((stat_temp.rec.area() >= ob.rec.area() * SIZE_CONSTRAINT_RATIO) || (stat_temp.rec.area() * SIZE_CONSTRAINT_RATIO <= ob.rec.area()))
+			return 0.0;
 
 		// Bounding box location contraint(gating)
 		if (stat_temp.rec.area() >= ob.rec.area()) {
-			if ((stat_temp.rec & ob.rec).area() < ob.rec.area() / 2) return 0.0;
+			if ((stat_temp.rec & ob.rec).area() < ob.rec.area() / 2)
+				return 0.0;
 		}
 		else {
-			if ((stat_temp.rec & ob.rec).area() < stat_temp.rec.area() / 2) return 0.0;
+			if ((stat_temp.rec & ob.rec).area() < stat_temp.rec.area() / 2)
+				return 0.0;
 		}
 	}
 
@@ -985,7 +995,8 @@ float GMPHD_MAF::FrameWiseAffinity(BBDet ob, BBTrk &stat_temp, const int MODEL_T
 
 	q_value = this->CalcGaussianProbability(dims_obs, z_temp, mean_obs, z_cov_flt);
 
-	if (q_value < FLT_MIN) q_value = 0.0;
+	if (q_value < FLT_MIN)
+		q_value = 0.0;
 	return q_value;
 }
 
@@ -1276,7 +1287,8 @@ vector<double> GMPHD_MAF::FusionZScoreNorm(const int& nObs, const int& mStats,
 				if (gmphd_cost[c][r] < 0.0) gmphd_cost[c][r] = 0.0;
 
 				kcf_cost[c][r] = (kcf_cost[c][r] - mean_kcf_cost) / (stddev_kcf);
-				if (kcf_cost[c][r] < 0.0) kcf_cost[c][r] = 0.0;
+				if (kcf_cost[c][r] < 0.0)
+					kcf_cost[c][r] = 0.0;
 
 				//m_cost[c][r] = log(1 + gmphd_cost[c][r] * kcf_cost[c][r]);
 				double cost_fusion = gmphd_cost[c][r] * kcf_cost[c][r];
@@ -1345,11 +1357,13 @@ void GMPHD_MAF::FusionTanHNorm(const int& nObs, const int& mStats,
 					continue;
 				}
 
-				gmphd_cost[c][r] = 0.5*(std::tanh(0.01*(gmphd_cost[c][r] - mean_gmphd_cost) / (stddev_gmphd)) + 1);
+				gmphd_cost[c][r] = 0.5 * (std::tanh(0.01 * (gmphd_cost[c][r] - mean_gmphd_cost) / (stddev_gmphd)) + 1);
 
 				// T2TA �� ��� �Ѱ�� GMPHD cost (position) �� ���Ƶ� KCF (appearance) �ȴ����� �����ϱ� ����
-				if (kcf_temp < CONF_LOWER_THRESH) kcf_cost[c][r] = 0.0;
-				else kcf_cost[c][r] = 0.5*(std::tanh(0.01*(kcf_cost[c][r] - mean_kcf_cost) / (stddev_kcf)) + 1);
+				if (kcf_temp < CONF_LOWER_THRESH)
+					kcf_cost[c][r] = 0.0;
+				else
+					kcf_cost[c][r] = 0.5 * (std::tanh(0.01 * (kcf_cost[c][r] - mean_kcf_cost) / (stddev_kcf)) + 1);
 
 				//m_cost[c][r] = log(1 + gmphd_cost[c][r] * kcf_cost[c][r]);
 				double cost_fusion = gmphd_cost[c][r] * kcf_cost[c][r];
@@ -1608,17 +1622,21 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 			if (stats_matrix[r][c].weight > 0.0) {
 				if ((double)(stats_matrix[r][c].weight) < (double)(FLT_MIN) / (double)10.0) {
 					std::cerr << "[" << iFrmCnt << "] weight(TW) < 0.1*FLT_MIN" << std::endl;
-					if (!AFFINITY_COST_L1_OR_L2_NORM_TW)	m_cost[c][r] = -1;
-					else									m_cost[c][r] = 10000;	// upper bound, ������ double�� ǥ�������� ���� �����ϹǷ� association �ĺ���
+					if (!AFFINITY_COST_L1_OR_L2_NORM_TW)
+						m_cost[c][r] = -1;
+					else
+						m_cost[c][r] = 10000; // upper bound, ������ double�� ǥ�������� ���� �����ϹǷ� association �ĺ���
+				} else {
+					if (!AFFINITY_COST_L1_OR_L2_NORM_TW)
+						m_cost[c][r] = -1.0 * Q_TH_LOW_10_INVERSE * numerator;
+					else
+						m_cost[c][r] = -100.0 * log(numerator);
 				}
-				else {
-					if (!AFFINITY_COST_L1_OR_L2_NORM_TW)	m_cost[c][r] = -1.0*Q_TH_LOW_10_INVERSE * numerator;
-					else									m_cost[c][r] = -100.0*log(numerator);
-				}
-			}
-			else {
-				if (!AFFINITY_COST_L1_OR_L2_NORM_TW)		m_cost[c][r] = 0;
-				else										m_cost[c][r] = 10000;	// upper bound, double�ε� ǥ�� �Ұ����� ���̹Ƿ� association �ĺ����� ����
+			} else {
+				if (!AFFINITY_COST_L1_OR_L2_NORM_TW)
+					m_cost[c][r] = 0;
+				else
+					m_cost[c][r] = 10000; // upper bound, double�ε� ǥ�� �Ұ����� ���̹Ƿ� association �ĺ����� ����
 			}
 
 			/*printf("(TW) Obs_id%d(%d,%d,%d,%d,%.4f) -> Stat_id%d:%.lf (n:%lf, q:%.20lf, W':%.5f)\n", \
@@ -1641,7 +1659,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 			//cv::namedWindow(winTitleT2TA);	cv::moveWindow(winTitleT2TA, 0, (this->frmHeight+30) * 3.0);
 			frameVis = img.clone();
 		}
-		//
+
 		if (mStats > 0) {
 
 			string winTitleT2TA = "Lost x Live Tracks"; // (ID: " + boost::to_string(id) +")";
@@ -1709,8 +1727,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 									//cv::rectangle(frameVis, obss[r].rec, cv::Scalar(0, 0, 0), -1);
 									if (VIS_T2TA_DETAIL)
 										confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
-								}
-								else {
+								} else {
 									cv::Rect res = stats_matrix[r][c].papp.update(frameProc, confProb, confMap, obss_live[r].rec, true, obss_live[r].segMask, this->params.SAF_MASK_T2TA);
 									//cv::addWeighted(frameVis(res), 0.5, confMap, 0.5, 0.0, frameVis(res));
 									//confMap.release();
@@ -1721,8 +1738,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 											confMap = cv::Mat(100, 100, CV_8UC(3), cv::Scalar(0, 0, 0));
 									}
 								}
-							}
-							else {
+							} else {
 								cv::Rect res = stats_matrix[r][c].papp.update(frameProc, confProb, confMap, obss_live[r].rec, true, obss_live[r].segMask, this->params.SAF_MASK_T2TA);
 
 								if (res.width < 1 || res.height < 1) {
@@ -1751,15 +1767,16 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 							if (m_cost[c][r] < 10000) {
 								gmphd_cost[c][r] = pow(e_8, m_cost[c][r] / (-100.0));
 								score_gmphd_temp = gmphd_cost[c][r];
-							}
-							else {
+							} else {
 								gmphd_cost[c][r] = 0.0;
 								score_gmphd_temp = gmphd_cost[c][r];
 							}
 
-							float score_kcf_temp = (1.0 - confProb)/**objConf*/;
-							if (SOT_TRACK_OPT == SOT_USE_KCF_TRACKER)	score_kcf_temp = 1.0 - confProb;
-							else										score_kcf_temp = confProb;
+							float score_kcf_temp = (1.0 - confProb) /**objConf*/;
+							if (SOT_TRACK_OPT == SOT_USE_KCF_TRACKER)
+								score_kcf_temp = 1.0 - confProb;
+							else
+								score_kcf_temp = confProb;
 
 							kcf_cost[c][r] = score_kcf_temp;
 
@@ -1793,8 +1810,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 
 								if (m_cost[c][r] < 10000) {
 									cv::putText(canvasDA, this->to_str(score_gmphd_temp).c_str(), cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
-								}
-								else {
+								} else {
 									char strINF_IOU[64];
 									sprintf(strINF_IOU, "INF (IOU:%.3f)", IOUs2D[r][c]);
 									cv::putText(canvasDA, strINF_IOU, cv::Point(margin + cellWH * (r + 1), margin - 30 + cellWH * (c + 1)), cv::FONT_HERSHEY_COMPLEX, 0.4, cv::Scalar(0, 0, 0), 1);
@@ -1809,8 +1825,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 								confMap.release();
 								confMapResize.release();
 							}
-						}
-						else {
+						} else {
 							gmphd_cost[c][r] = 0.0;
 							kcf_cost[c][r] = 0.0;
 							m_cost[c][r] = 10000;
@@ -1928,8 +1943,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 			}
 		}
 		max_cost = 1 - min_cost;
-	}
-	else {
+	} else {
 		max_cost = 10000;
 		int r_min = -1, c_min = -1;
 	}
@@ -1946,8 +1960,7 @@ void GMPHD_MAF::DataAssocTrkWise(int iFrmCnt, cv::Mat& img, vector<BBTrk>& stats
 		//printf("[%dx%d] ", stats_lost.size(), obss_live.size());
 		//this->cvPrintVec2Vec(m_cost, "Sparse Costs (T2TA-"+sym::OBJECT_STRINGS[this->trackObjType]+")");
 		//this->cvPrintVec2Vec(assigns_sparse, "Sparse Assignments");
-	}
-	else {
+	} else {
 		assigns_sparse.resize(obss_live.size(), std::vector<int>(stats_lost.size(), 0));
 		//printf("[%dx%d]", trans_indices.size(), trans_indices[0].size());
 
@@ -2008,12 +2021,9 @@ void GMPHD_MAF::ArrangeTargetsVecsBatchesLiveLost() {
 	for (int tr = 0; tr < this->liveTrkVec.size(); ++tr) {
 		if (this->liveTrkVec[tr].isAlive) {
 			liveTargets.push_back(this->liveTrkVec[tr]);
-		}
-		else if (!this->liveTrkVec[tr].isAlive && !this->liveTrkVec[tr].isMerged) {
-
+		} else if (!this->liveTrkVec[tr].isAlive && !this->liveTrkVec[tr].isMerged) {
 			lostTargets.push_back(this->liveTrkVec[tr]);
-		}
-		else {
+		} else {
 			// abandon the merged targets (When target a'ID and b'TD are merged with a'ID < b'TD, target b is abandoned and not considered as LB_ASSOCIATION) 
 		}
 	}
@@ -2036,8 +2046,7 @@ void GMPHD_MAF::PushTargetsVecs2BatchesLiveLost() {
 		}
 		this->liveTracksBatch[this->params.FRAMES_DELAY_SIZE] = this->liveTrkVec;
 		this->lostTracksBatch[this->params.FRAMES_DELAY_SIZE] = this->lostTrkVec;
-	}
-	else if (this->sysFrmCnt < this->params.TRACK_MIN_SIZE) {
+	} else if (this->sysFrmCnt < this->params.TRACK_MIN_SIZE) {
 		this->liveTracksBatch[this->sysFrmCnt] = this->liveTrkVec;
 		this->lostTracksBatch[this->sysFrmCnt] = this->lostTrkVec;
 	}
@@ -2071,8 +2080,7 @@ void GMPHD_MAF::ClassifyTrackletReliability(int iFrmCnt, unordered_map<int, vect
 					}
 
 					unreliables[iterID->first].clear();
-				}
-				else {																					// unreliable (witout latency)
+				} else { // unreliable (witout latency)
 					pair< unordered_map<int, vector<BBTrk>>::iterator, bool> isEmpty = unreliables.insert(unordered_map<int, vector<BBTrk>>::value_type(iterID->first, iterID->second));
 					if (isEmpty.second == false)
 						unreliables[iterID->first].push_back(iterID->second.back());
@@ -2097,8 +2105,7 @@ void GMPHD_MAF::ClassifyReliableTracklets2LiveLost(int iFrmCnt, const unordered_
 				//if (this->params.TRACK_MIN_SIZE == 2) { 
 				if (iterT->second.size() == 1) {
 					obss.push_back(iterT->second.back());
-				}
-				else if (iterT->second.size() > 1) {
+				} else if (iterT->second.size() > 1) {
 					liveReliables.push_back(iterT->second.back());
 				}
 				////}
@@ -2113,8 +2120,7 @@ void GMPHD_MAF::ClassifyReliableTracklets2LiveLost(int iFrmCnt, const unordered_
 
 				/*cv::imshow((string("live_r_") + std::to_string(iterT->first)).c_str(), liveReliables.back().tmpl);
 				cv::waitKey(1);*/
-			}
-			else if (iterT->second.back().fn < iFrmCnt - this->params.FRAMES_DELAY_SIZE) {
+			} else if (iterT->second.back().fn < iFrmCnt - this->params.FRAMES_DELAY_SIZE) {
 				//if(iterT->second.size()>1)
 				lostReliables.push_back(iterT->second.back());
 				//cv::imshow((string("lost") + std::to_string(iterT->first)).c_str(), lostReliables.back().tmpl);

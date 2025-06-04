@@ -181,7 +181,7 @@ public:
 private:
 	cv::Mat color_map;
 	void InitializeColorMap() {
-		cv::Mat img_gray(32, 256, CV_8UC1);
+		cv::Mat img_gray(32, 256, CV_8UC(1));
 
 		for (int r = 0; r < img_gray.rows; r++)
 			for (int c = 0; c < img_gray.cols; c++)
@@ -195,7 +195,7 @@ private:
 		if (img_gray.empty()) {
 			CV_Error(cv::Error::StsBadArg, "Sample image is empty. Please adjust your path, so it points to a valid input image!");
 		}
-		color_map = cv::Mat(32, 256, CV_8UC3);
+		color_map = cv::Mat(32, 256, CV_8UC(3));
 
 		// Apply the colormap:
 		applyColorMap(img_gray(cv::Rect(0, 0, 256, 32)), this->color_map(cv::Rect(0, 0, 256, 32)), cv::COLORMAP_JET);
@@ -232,7 +232,7 @@ private:
 	{
 		/*
 		<Mat::type()>
-		depth�� channels���� �����ϴ� ���� ex. CV_64FC1
+		depth�� channels���� �����ϴ� ���� ex. CV_64FC(1)
 		<Mat::depth()>
 		CV_8U - 8-bit unsigned integers ( 0..255 )
 		CV_8S - 8-bit signed integers ( -128..127 )

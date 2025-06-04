@@ -181,7 +181,7 @@ void OnlineTracker::InitColorTab()
 
 	// --- C++ API Visualization (Optional, kept similar to original logic) ---
 	// If you need to visualize the color palette later, you can use cv::Mat
-	// cv::Mat temp_vis = cv::Mat::zeros(cv::Size(40 * MAX_OBJECTS, 32), CV_8UC3);
+	// cv::Mat temp_vis = cv::Mat::zeros(cv::Size(40 * MAX_OBJECTS, 32), CV_8UC(3));
 	// --- End Visualization ---
 
 	for (int i = 0; i < a; i++) {
@@ -222,7 +222,7 @@ void OnlineTracker::InitImagesQueue(int width, int height) {
 	this->imgBatch = new cv::Mat[this->params.QUEUE_SIZE];
 	for (int i = 0; i < this->params.QUEUE_SIZE; i++) {
 		this->imgBatch[i].release();
-		this->imgBatch[i] = cv::Mat(height, width, CV_8UC3);
+		this->imgBatch[i] = cv::Mat(height, width, CV_8UC(3));
 	}
 	this->frmWidth = width;
 	this->frmHeight = height;
@@ -279,7 +279,7 @@ double OnlineTracker::CalcGaussianProbability(const int dims, const cv::Mat x, c
 	}
 	else {
 
-		cv::Mat cov_dbl(dims, dims, CV_64FC1);
+		cv::Mat cov_dbl(dims, dims, CV_64FC(1));
 
 		for (int r = 0; r < dims; ++r) {
 			for (int c = 0; c < dims; ++c) {
@@ -287,8 +287,8 @@ double OnlineTracker::CalcGaussianProbability(const int dims, const cv::Mat x, c
 			}
 		}
 
-		cv::Mat sub(dims, 1, CV_64FC1);
-		cv::Mat power(1, 1, CV_64FC1);
+		cv::Mat sub(dims, 1, CV_64FC(1));
+		cv::Mat power(1, 1, CV_64FC(1));
 
 		double exponent = 0.0;
 		double coefficient = 1.0;
@@ -397,7 +397,7 @@ float OnlineTracker::CalcMIOU(const cv::Rect& Ri, const cv::Mat& Si, const cv::R
 		int w = max[0] - min[0];
 		int h = max[1] - min[1];
 
-		cv::Mat mu(h, w, CV_8UC1, cv::Scalar(0));
+		cv::Mat mu(h, w, CV_8UC(1), cv::Scalar(0));
 		cv::Rect ri(Ri.x - x, Ri.y - y, Ri.width, Ri.height);
 		cv::Mat mi = mu(ri);
 
@@ -477,7 +477,7 @@ void OnlineTracker::DrawTrkBBS(cv::Mat& img, cv::Rect rec, cv::Scalar color, int
 			int idTextWidth = fontScale * (int)(idNChars + 4) * 20;
 			int idTextHeight = fontScale * 40;
 
-			cv::Mat gt_mat = cv::Mat(rec.height, rec.width, CV_8UC3);
+			cv::Mat gt_mat = cv::Mat(rec.height, rec.width, CV_8UC(3));
 			gt_mat.setTo(color);
 
 			addWeighted(img(rec), 0.5, gt_mat, 0.5, 0.0, img(rec));
@@ -579,7 +579,7 @@ void OnlineTracker::cvPrintMat(cv::Mat matrix, std::string name)
 {
 	/*
 	<Mat::type()>
-	depth�� channels���� �����ϴ� ���� ex. CV_64FC1
+	depth�� channels���� �����ϴ� ���� ex. CV_64FC(1)
 	<Mat::depth()>
 	CV_8U - 8-bit unsigned integers ( 0..255 )
 	CV_8S - 8-bit signed integers ( -128..127 )
@@ -680,8 +680,8 @@ cv::Mat OnlineTracker::cvPerspectiveTrans2Rect(const cv::Mat img, const std::vec
 	2	3
 	*/
 
-	cv::Mat imgFloat(cv::Size(img.cols, img.rows), CV_32FC3);
-	img.convertTo(imgFloat, CV_32FC3);
+	cv::Mat imgFloat(cv::Size(img.cols, img.rows), CV_32FC(3));
+	img.convertTo(imgFloat, CV_32FC(3));
 
 	cv::Point2f srcPts[4], dstPts[4];
 
@@ -738,13 +738,13 @@ cv::Mat OnlineTracker::cvPerspectiveTrans2Rect(const cv::Mat img, const std::vec
 
 	cv::Mat srcImg = imgFloat(cv::Rect(minP[0], minP[1], widthP, heightP));
 	cv::Size outputSize(maxWidth, maxHeight);
-	cv::Mat dstImg(outputSize, CV_32FC3);
+	cv::Mat dstImg(outputSize, CV_32FC(3));
 	cv::warpPerspective(imgFloat, dstImg, transMatrix, outputSize);
 
-	cv::Mat srcImgDisplay(cv::Size(srcImg.cols, srcImg.rows), CV_8UC3);
-	srcImg.convertTo(srcImgDisplay, CV_8UC3);
-	cv::Mat dstImgDisplay(outputSize, CV_8UC3);
-	dstImg.convertTo(dstImgDisplay, CV_8UC3);
+	cv::Mat srcImgDisplay(cv::Size(srcImg.cols, srcImg.rows), CV_8UC(3));
+	srcImg.convertTo(srcImgDisplay, CV_8UC(3));
+	cv::Mat dstImgDisplay(outputSize, CV_8UC(3));
+	dstImg.convertTo(dstImgDisplay, CV_8UC(3));
 
 	if (!imgFloat.empty()) imgFloat.release();
 	if (!srcImg.empty()) srcImg.release();
@@ -955,7 +955,7 @@ BBTrk OnlineTracker::KalmanMotionbasedPrediction(BBTrk lostStat, BBTrk liveObs) 
 
 	int fd = liveObs.fn - lostStat.fn;
 
-	cv::Mat stateMat(4, 1, CV_32FC1);
+	cv::Mat stateMat(4, 1, CV_32FC(1));
 	cv::KalmanFilter stateKF = cv::KalmanFilter(4, 2, 0);
 
 	// statePre, mean (state std::vector in KalmanFilter), variable, init
@@ -999,7 +999,7 @@ BBTrk OnlineTracker::KalmanMotionbasedPrediction(BBTrk lostStat, BBTrk liveObs) 
 		0, 0, (float)lostStat.cov.at<double>(2, 2), 0,
 		0, 0, 0, (float)lostStat.cov.at<double>(3, 3));
 
-	cv::Mat correctedCov(2, 2, CV_32FC1);
+	cv::Mat correctedCov(2, 2, CV_32FC(1));
 
 
 	BBTrk statePredRes;
@@ -1022,7 +1022,7 @@ BBTrk OnlineTracker::KalmanMotionbasedPrediction(BBTrk lostStat, BBTrk liveObs) 
 		correctedCov = stateKF.measurementNoiseCov + stateKF.measurementMatrix*stateKF.errorCovPre*stateKF.measurementMatrix.t();
 	}
 
-	// CV_32FC1 to CV_64FC1
+	// CV_32FC(1) to CV_64FC(1)
 	for (int r = 0; r < correctedCov.rows; r++)
 		for (int c = 0; c < correctedCov.cols; c++)
 			statePredRes.cov.at<double>(r, c) = correctedCov.at<float>(r, c);
